@@ -7,7 +7,8 @@ from datetime import datetime
 class Mensagem:
     def __init__(self, id_mensagem=None, id_chat=None, texto="", data_envio=None, Remetente_tipo="", status="Enviada",):
 
-
+...
+aa
 
 
 
