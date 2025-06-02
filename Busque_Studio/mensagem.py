@@ -5,10 +5,14 @@ from chat import Chat
 from datetime import datetime 
 
 class Mensagem:
-    def __init__(self, id_mensagem=None, id_chat=None, texto="", data_envio=None, Remetente_tipo="", status="Enviada",):
-
-...
-aa
+    def __init__(self, id_mensagem=None, id_chat=None, texto="", data_envio=None, remetente_tipo="", status="Enviada",):
+        self.id_mensagem = id_mensagem
+        self.id_chat = id_chat
+        self.texto = texto
+        self.data_envio = data_envio or datetime.now()
+        self.remetente_tipo = remetente_tipo
+        self.status = status
+        
 
 
 

@@ -14,7 +14,7 @@ class PermissaoDAO:
     def criar(self, permissao):
         sql = "INSERT INTO permissao (nome, descricao) VALUES (%s, %d)"
         self.cursor.execute(sql, (permissao.nome, permissao.descricao))
-        self.conexao.commit
+        self.conexao.commit()
 
     def listar(self):
         self.cursor.execute("SELECT * FROM permissao")

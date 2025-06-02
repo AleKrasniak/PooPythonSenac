@@ -15,7 +15,8 @@ class DenunciaDAO:
     def criar(self, denuncia):
         sql = "INSERTO INTO denuncia (id_cliente, id_estudio, motivo, status, data_criacao, foto_caminho, foto_nome_arquivo, data_atualizacao) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
         self.cursor.execute(sql, (denuncia.id_cliente, denuncia.id_estudio, denuncia.motivo, denuncia.status, denuncia.data_criacao, denuncia.foto_caminho, denuncia.foto_nome_arquivo, denuncia.data_atualizacao))
-    
+        self.cursor.commit()
+
     def listar(self):
         self.cursor.execute("SELECT * FROM denuncia")
         return self.cursor.fetchall()

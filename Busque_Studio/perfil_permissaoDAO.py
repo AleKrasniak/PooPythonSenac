@@ -17,7 +17,7 @@ class Perfil_PermissaoDAO:
     def criar(self, perfil_permissao):
         sql = "INSERT INTO perfil_permissao (id_perfil, id_permissao) VALUES (%s, %s, %s)"
         self.cursor.execute(sql, (perfil_permissao.id_perfil, perfil_permissao.id_permissao))
-        self.conexao.commit
+        self.conexao.commit()
 
     def listar (self):
         self.cursor.execute("SELECT * FROM perfil_permissao")

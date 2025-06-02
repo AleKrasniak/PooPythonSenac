@@ -15,7 +15,7 @@ class UsuarioDAO:
     def criar(self, usuario):
         sql = "INSERT INTO usuarios (nome, email) VALUES (%s, %s)"
         self.cursor.execute(sql, (usuario.nome, usuario.email))
-        self.conexao.commit
+        self.conexao.commit()
 
     def listar(self):
         self.cursor.execute("SELECT * FROM  usuarios")

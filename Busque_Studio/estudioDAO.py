@@ -16,6 +16,7 @@ class EstudioDAO:
         def criar(self, estudio):
             sql= "INSERT INTO estudio (id_perfil, id_endereco, nome, cnpj, descricao, login, senha, tipo) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
             self.cursor.execute(sql, (estudio.id_perfil, estudio.id_endereco, estudio.nome, estudio.cnpj, estudio.descricao, estudio.login, estudio.senha, estudio.tipo ))
+            self.conexao.commit()
         
         def listar(self):
             self.cursor.execute("SELECT * FROM estudio")

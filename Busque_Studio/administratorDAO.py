@@ -16,6 +16,7 @@ class AdministradorDAO:
     def criar(self, administrador):
         sql= "INSERT INTO administrador (id_perfil, nome, email, login, senha) VALUES (%s, %s, %s, %s, %s)"
         self.cursor.execute(sql, (administrador.id_perfil, administrador.nome, administrador.email, administrador.login, administrador.senha))
+        self.cursor.commit()
 
     def listar(self):
         self.cursor.execute ("SELECT * FROM administrador")
