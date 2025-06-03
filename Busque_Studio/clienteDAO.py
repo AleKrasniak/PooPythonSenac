@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox
-import mysql.connector   
+import mysql.connector
+
 
 class ClienteDAO:
     def __init__(self):
