@@ -1,4 +1,4 @@
-# app_principal.py - CORREÇÃO DO LOGIN
+# app_principal.py
 import tkinter as tk
 from tkinter import messagebox, simpledialog, ttk
 from app_cliente import AppCliente
@@ -17,7 +17,7 @@ class AppLogin:
         # Criar janela de login - AUMENTADA
         self.janela = tk.Toplevel(parent)
         self.janela.title("BusqueStudios - Login")
-        self.janela.geometry("600x500")  # Aumentado para acomodar os botões
+        self.janela.geometry("500x400")  # Aumentado de 400x300 para 500x400
         self.janela.configure(bg='#34495e')
         self.janela.resizable(False, False)
         
@@ -33,9 +33,9 @@ class AppLogin:
     def centralizar_janela(self):
         """Centraliza a janela de login na tela"""
         self.janela.update_idletasks()
-        x = (self.janela.winfo_screenwidth() // 2) - (550 // 2)  # Ajustado para nova largura
-        y = (self.janela.winfo_screenheight() // 2) - (450 // 2)  # Ajustado para nova altura
-        self.janela.geometry(f"600x500+{x}+{y}")
+        x = (self.janela.winfo_screenwidth() // 2) - (500 // 2)  # Ajustado para nova largura
+        y = (self.janela.winfo_screenheight() // 2) - (400 // 2)  # Ajustado para nova altura
+        self.janela.geometry(f"500x400+{x}+{y}")
         
     def criar_interface_login(self):
         """Cria a interface da janela de login"""
@@ -67,7 +67,7 @@ class AppLogin:
         
         # Frame para botões
         frame_botoes = tk.Frame(self.janela, bg='#34495e')
-        frame_botoes.pack(pady=50)  # Mais espaçamento para evitar corte
+        frame_botoes.pack(pady=40)  # Mais espaçamento
         
         # Botão Entrar - maior
         btn_entrar = tk.Button(frame_botoes, text="ENTRAR", 
@@ -118,109 +118,37 @@ class AppLogin:
             messagebox.showerror("Erro", f"Erro ao fazer login: {str(e)}", parent=self.janela)
     
     def validar_credenciais(self, login, senha):
-        """Valida as credenciais do usuário no banco de dados - VERSÃO CORRIGIDA"""
+        """Valida as credenciais do usuário no banco de dados"""
         try:
             cursor = self.dao.cursor
             
-            # PRIMEIRA TENTATIVA: Com nome_perfil (estrutura ideal)
-            try:
-                query_completa = """
-                    SELECT c.id_cliente, c.nome, c.email, c.telefone, c.cpf, 
-                           p.nome_perfil, c.id_perfil
-                    FROM cliente c
-                    INNER JOIN perfil p ON c.id_perfil = p.id_perfil
-                    WHERE c.login = %s AND c.senha = %s
-                """
-                cursor.execute(query_completa, (login, senha))
-                resultado = cursor.fetchone()
-                
-                if resultado:
-                    return {
-                        'id_cliente': resultado[0],
-                        'nome': resultado[1],
-                        'email': resultado[2],
-                        'telefone': resultado[3],
-                        'cpf': resultado[4],
-                        'nome_perfil': resultado[5],
-                        'id_perfil': resultado[6]
-                    }
-                    
-            except mysql.connector.Error as e:
-                # Se der erro na primeira query, tentar versões alternativas
-                print(f"Primeira query falhou: {e}")
-                
-                # SEGUNDA TENTATIVA: Verificar colunas disponíveis na tabela perfil
-                try:
-                    cursor.execute("DESCRIBE perfil")
-                    colunas_perfil = [row[0] for row in cursor.fetchall()]
-                    print(f"Colunas na tabela perfil: {colunas_perfil}")
-                    
-                    # Determinar nome da coluna do perfil
-                    nome_coluna_perfil = None
-                    for possivel_nome in ['nome_perfil', 'nome', 'perfil', 'descricao', 'tipo']:
-                        if possivel_nome in colunas_perfil:
-                            nome_coluna_perfil = possivel_nome
-                            break
-                    
-                    if nome_coluna_perfil:
-                        query_adaptada = f"""
-                            SELECT c.id_cliente, c.nome, c.email, c.telefone, c.cpf, 
-                                   p.{nome_coluna_perfil}, c.id_perfil
-                            FROM cliente c
-                            INNER JOIN perfil p ON c.id_perfil = p.id_perfil
-                            WHERE c.login = %s AND c.senha = %s
-                        """
-                        cursor.execute(query_adaptada, (login, senha))
-                        resultado = cursor.fetchone()
-                        
-                        if resultado:
-                            return {
-                                'id_cliente': resultado[0],
-                                'nome': resultado[1],
-                                'email': resultado[2],
-                                'telefone': resultado[3],
-                                'cpf': resultado[4],
-                                'nome_perfil': resultado[5],
-                                'id_perfil': resultado[6]
-                            }
-                    
-                except mysql.connector.Error as e2:
-                    print(f"Segunda query também falhou: {e2}")
+            # Query para buscar usuário com login e senha
+            query = """
+                SELECT c.id_cliente, c.nome, c.email, c.telefone, c.cpf, 
+                       p.nome_perfil, c.id_perfil
+                FROM cliente c
+                INNER JOIN perfil p ON c.id_perfil = p.id_perfil
+                WHERE c.login = %s AND c.senha = %s
+            """
             
-            # TERCEIRA TENTATIVA: Query simplificada sem JOIN
-            try:
-                query_simples = """
-                    SELECT id_cliente, nome, email, telefone, cpf, id_perfil
-                    FROM cliente
-                    WHERE login = %s AND senha = %s
-                """
-                cursor.execute(query_simples, (login, senha))
-                resultado = cursor.fetchone()
-                
-                if resultado:
-                    # Mapear id_perfil para nome_perfil
-                    perfis = {1: 'Cliente', 2: 'Estúdio', 3: 'Admin'}
-                    nome_perfil = perfis.get(resultado[5], 'Desconhecido')
-                    
-                    return {
-                        'id_cliente': resultado[0],
-                        'nome': resultado[1],
-                        'email': resultado[2],
-                        'telefone': resultado[3],
-                        'cpf': resultado[4],
-                        'nome_perfil': nome_perfil,
-                        'id_perfil': resultado[5]
-                    }
-                    
-            except mysql.connector.Error as e3:
-                print(f"Terceira query também falhou: {e3}")
-                raise e3
+            cursor.execute(query, (login, senha))
+            resultado = cursor.fetchone()
             
+            if resultado:
+                return {
+                    'id_cliente': resultado[0],
+                    'nome': resultado[1],
+                    'email': resultado[2],
+                    'telefone': resultado[3],
+                    'cpf': resultado[4],
+                    'nome_perfil': resultado[5],
+                    'id_perfil': resultado[6]
+                }
             return None
             
         except Exception as e:
-            print(f"Erro geral na validação: {e}")
-            raise e
+            print(f"Erro na validação: {e}")
+            return None
     
     def limpar_campos(self):
         """Limpa os campos de login"""

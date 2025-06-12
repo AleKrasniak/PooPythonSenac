@@ -1,4 +1,4 @@
-# app_principal.py - CORREÇÃO DO LOGIN
+# app_principal.py
 import tkinter as tk
 from tkinter import messagebox, simpledialog, ttk
 from app_cliente import AppCliente
@@ -7,92 +7,119 @@ from app_admin import AppAdmin
 import mysql.connector
 from clienteDAO import ClienteDAO
 
-class AppLogin:
-    """Classe para a janela de login separada"""
-    def __init__(self, parent, callback_sucesso):
-        self.parent = parent
-        self.callback_sucesso = callback_sucesso
+class AppPrincipal:
+    def __init__(self):
+        self.root = tk.Tk()
+        self.root.title("BusqueStudios - Sistema Principal")
+        self.root.geometry("450x600")
+        self.root.configure(bg='#2c3e50')
+        
         self.dao = ClienteDAO()
+        self.usuario_logado = None
         
-        # Criar janela de login - AUMENTADA
-        self.janela = tk.Toplevel(parent)
-        self.janela.title("BusqueStudios - Login")
-        self.janela.geometry("600x500")  # Aumentado para acomodar os botões
-        self.janela.configure(bg='#34495e')
-        self.janela.resizable(False, False)
+        self.criar_interface()
         
-        # Centralizar janela
-        self.centralizar_janela()
+    def criar_interface(self):
+        # Logo/Título
+        titulo = tk.Label(self.root, text="BUSQUE STUDIOS", 
+                         font=('Arial', 24, 'bold'), 
+                         bg='#2c3e50', fg='white')
+        titulo.pack(pady=30)
         
-        # Tornar modal
-        self.janela.transient(parent)
-        self.janela.grab_set()
+        subtitulo = tk.Label(self.root, text="Sistema de Gestão", 
+                            font=('Arial', 12), 
+                            bg='#2c3e50', fg='#bdc3c7')
+        subtitulo.pack(pady=(0, 30))
         
-        self.criar_interface_login()
+        # SEÇÃO DE LOGIN
+        self.criar_secao_login()
         
-    def centralizar_janela(self):
-        """Centraliza a janela de login na tela"""
-        self.janela.update_idletasks()
-        x = (self.janela.winfo_screenwidth() // 2) - (550 // 2)  # Ajustado para nova largura
-        y = (self.janela.winfo_screenheight() // 2) - (450 // 2)  # Ajustado para nova altura
-        self.janela.geometry(f"600x500+{x}+{y}")
+        # Separador
+        separador = tk.Frame(self.root, height=2, bg='#34495e')
+        separador.pack(fill='x', padx=40, pady=20)
         
-    def criar_interface_login(self):
-        """Cria a interface da janela de login"""
-        # Título - mais espaçamento
-        titulo = tk.Label(self.janela, text="FAZER LOGIN", 
-                         font=('Arial', 24, 'bold'),  # Fonte maior
-                         bg='#34495e', fg='white')
-        titulo.pack(pady=(40, 50))  # Mais espaçamento
+        # SEÇÃO DE CADASTRO
+        self.criar_secao_cadastro()
         
-        # Frame para campos - mais espaçoso
-        frame_campos = tk.Frame(self.janela, bg='#34495e')
-        frame_campos.pack(pady=30)
+    def criar_secao_login(self):
+        """Cria a seção de login"""
+        # Frame de login
+        frame_login = tk.Frame(self.root, bg='#34495e', relief='ridge', bd=2)
+        frame_login.pack(pady=10, padx=40, fill='x')
         
-        # Campo Login
+        # Título da seção
+        tk.Label(frame_login, text="FAZER LOGIN", 
+                font=('Arial', 14, 'bold'), 
+                bg='#34495e', fg='white').pack(pady=(10, 15))
+        
+        # Campos de login
+        frame_campos = tk.Frame(frame_login, bg='#34495e')
+        frame_campos.pack(pady=10, padx=20)
+        
+        # Login
         tk.Label(frame_campos, text="Login:", 
-                font=('Arial', 14, 'bold'),  # Fonte maior
-                bg='#34495e', fg='white').grid(row=0, column=0, sticky='w', pady=15)
+                font=('Arial', 10), bg='#34495e', fg='white').grid(row=0, column=0, sticky='w', pady=5)
+        self.entry_login = tk.Entry(frame_campos, width=25, font=('Arial', 10))
+        self.entry_login.grid(row=0, column=1, pady=5, padx=(10, 0))
         
-        self.entry_login = tk.Entry(frame_campos, width=30, font=('Arial', 14))  # Maior e fonte maior
-        self.entry_login.grid(row=0, column=1, pady=15, padx=(20, 0))
-        
-        # Campo Senha
+        # Senha
         tk.Label(frame_campos, text="Senha:", 
-                font=('Arial', 14, 'bold'),  # Fonte maior
-                bg='#34495e', fg='white').grid(row=1, column=0, sticky='w', pady=15)
+                font=('Arial', 10), bg='#34495e', fg='white').grid(row=1, column=0, sticky='w', pady=5)
+        self.entry_senha = tk.Entry(frame_campos, width=25, font=('Arial', 10), show='*')
+        self.entry_senha.grid(row=1, column=1, pady=5, padx=(10, 0))
         
-        self.entry_senha = tk.Entry(frame_campos, width=30, font=('Arial', 14), show='*')  # Maior e fonte maior
-        self.entry_senha.grid(row=1, column=1, pady=15, padx=(20, 0))
-        
-        # Frame para botões
-        frame_botoes = tk.Frame(self.janela, bg='#34495e')
-        frame_botoes.pack(pady=50)  # Mais espaçamento para evitar corte
-        
-        # Botão Entrar - maior
-        btn_entrar = tk.Button(frame_botoes, text="ENTRAR", 
-                              command=self.fazer_login,
-                              bg='#27ae60', fg='white',
-                              font=('Arial', 14, 'bold'),  # Fonte maior
-                              width=15, height=2,  # Mais largo
-                              cursor='hand2')
-        btn_entrar.grid(row=0, column=0, padx=15)
-        
-        # Botão Cancelar - maior
-        btn_cancelar = tk.Button(frame_botoes, text="CANCELAR", 
-                                command=self.janela.destroy,
-                                bg='#e74c3c', fg='white',
-                                font=('Arial', 14, 'bold'),  # Fonte maior
-                                width=15, height=2,  # Mais largo
-                                cursor='hand2')
-        btn_cancelar.grid(row=0, column=1, padx=15)
+        # Botão de login
+        btn_login = tk.Button(frame_login, text="ENTRAR", 
+                             command=self.fazer_login,
+                             bg='#27ae60', fg='white',
+                             font=('Arial', 12, 'bold'),
+                             width=15, height=2,
+                             cursor='hand2')
+        btn_login.pack(pady=15)
         
         # Bind Enter para fazer login
         self.entry_senha.bind('<Return>', lambda event: self.fazer_login())
-        self.entry_login.bind('<Return>', lambda event: self.entry_senha.focus())
         
-        # Focar no campo login
-        self.entry_login.focus()
+    def criar_secao_cadastro(self):
+        """Cria a seção de cadastros"""
+        # Título da seção
+        tk.Label(self.root, text="OU CADASTRE-SE", 
+                font=('Arial', 14, 'bold'), 
+                bg='#2c3e50', fg='#bdc3c7').pack(pady=(10, 20))
+        
+        # Frame para botões de cadastro
+        frame_botoes = tk.Frame(self.root, bg='#2c3e50')
+        frame_botoes.pack(expand=True)
+        
+        # Botão Cadastrar Cliente
+        btn_cliente = tk.Button(frame_botoes, 
+                               text="CADASTRAR CLIENTE",
+                               command=self.abrir_cadastro_cliente,
+                               bg='#BA4467', fg='white',
+                               font=('Arial', 14, 'bold'),
+                               width=20, height=2,
+                               cursor='hand2')
+        btn_cliente.pack(pady=10)
+        
+        # Botão Cadastrar Estúdio
+        btn_estudio = tk.Button(frame_botoes, 
+                               text="CADASTRAR ESTÚDIO",
+                               command=self.abrir_cadastro_estudio,
+                               bg='#e74c3c', fg='white',
+                               font=('Arial', 14, 'bold'),
+                               width=20, height=2,
+                               cursor='hand2')
+        btn_estudio.pack(pady=10)
+        
+        # Botão Admin
+        btn_admin = tk.Button(frame_botoes, 
+                             text="ÁREA ADMINISTRATIVA",
+                             command=self.abrir_area_admin,
+                             bg='#95a5a6', fg='white',
+                             font=('Arial', 10),
+                             width=20, height=1,
+                             cursor='hand2')
+        btn_admin.pack(pady=(30, 10))
         
     def fazer_login(self):
         """Realiza o login do usuário"""
@@ -100,7 +127,7 @@ class AppLogin:
         senha = self.entry_senha.get().strip()
         
         if not login or not senha:
-            messagebox.showwarning("Atenção", "Preencha login e senha!", parent=self.janela)
+            messagebox.showwarning("Atenção", "Preencha login e senha!")
             return
             
         try:
@@ -108,122 +135,212 @@ class AppLogin:
             usuario = self.validar_credenciais(login, senha)
             
             if usuario:
-                self.janela.destroy()  # Fecha janela de login
-                self.callback_sucesso(usuario)  # Chama callback com dados do usuário
+                self.usuario_logado = usuario
+                self.mostrar_area_logado()
             else:
-                messagebox.showerror("Erro", "Login ou senha incorretos!", parent=self.janela)
-                self.limpar_campos()
+                messagebox.showerror("Erro", "Login ou senha incorretos!")
+                self.limpar_campos_login()
                 
         except Exception as e:
-            messagebox.showerror("Erro", f"Erro ao fazer login: {str(e)}", parent=self.janela)
+            messagebox.showerror("Erro", f"Erro ao fazer login: {str(e)}")
     
     def validar_credenciais(self, login, senha):
-        """Valida as credenciais do usuário no banco de dados - VERSÃO CORRIGIDA"""
+        """Valida as credenciais do usuário no banco de dados"""
         try:
             cursor = self.dao.cursor
             
-            # PRIMEIRA TENTATIVA: Com nome_perfil (estrutura ideal)
-            try:
-                query_completa = """
-                    SELECT c.id_cliente, c.nome, c.email, c.telefone, c.cpf, 
-                           p.nome_perfil, c.id_perfil
-                    FROM cliente c
-                    INNER JOIN perfil p ON c.id_perfil = p.id_perfil
-                    WHERE c.login = %s AND c.senha = %s
-                """
-                cursor.execute(query_completa, (login, senha))
-                resultado = cursor.fetchone()
-                
-                if resultado:
-                    return {
-                        'id_cliente': resultado[0],
-                        'nome': resultado[1],
-                        'email': resultado[2],
-                        'telefone': resultado[3],
-                        'cpf': resultado[4],
-                        'nome_perfil': resultado[5],
-                        'id_perfil': resultado[6]
-                    }
-                    
-            except mysql.connector.Error as e:
-                # Se der erro na primeira query, tentar versões alternativas
-                print(f"Primeira query falhou: {e}")
-                
-                # SEGUNDA TENTATIVA: Verificar colunas disponíveis na tabela perfil
-                try:
-                    cursor.execute("DESCRIBE perfil")
-                    colunas_perfil = [row[0] for row in cursor.fetchall()]
-                    print(f"Colunas na tabela perfil: {colunas_perfil}")
-                    
-                    # Determinar nome da coluna do perfil
-                    nome_coluna_perfil = None
-                    for possivel_nome in ['nome_perfil', 'nome', 'perfil', 'descricao', 'tipo']:
-                        if possivel_nome in colunas_perfil:
-                            nome_coluna_perfil = possivel_nome
-                            break
-                    
-                    if nome_coluna_perfil:
-                        query_adaptada = f"""
-                            SELECT c.id_cliente, c.nome, c.email, c.telefone, c.cpf, 
-                                   p.{nome_coluna_perfil}, c.id_perfil
-                            FROM cliente c
-                            INNER JOIN perfil p ON c.id_perfil = p.id_perfil
-                            WHERE c.login = %s AND c.senha = %s
-                        """
-                        cursor.execute(query_adaptada, (login, senha))
-                        resultado = cursor.fetchone()
-                        
-                        if resultado:
-                            return {
-                                'id_cliente': resultado[0],
-                                'nome': resultado[1],
-                                'email': resultado[2],
-                                'telefone': resultado[3],
-                                'cpf': resultado[4],
-                                'nome_perfil': resultado[5],
-                                'id_perfil': resultado[6]
-                            }
-                    
-                except mysql.connector.Error as e2:
-                    print(f"Segunda query também falhou: {e2}")
+            # Query para buscar usuário com login e senha
+            query = """
+                SELECT c.id_cliente, c.nome, c.email, c.telefone, c.cpf, 
+                       p.nome_perfil, c.id_perfil
+                FROM cliente c
+                INNER JOIN perfil p ON c.id_perfil = p.id_perfil
+                WHERE c.login = %s AND c.senha = %s
+            """
             
-            # TERCEIRA TENTATIVA: Query simplificada sem JOIN
-            try:
-                query_simples = """
-                    SELECT id_cliente, nome, email, telefone, cpf, id_perfil
-                    FROM cliente
-                    WHERE login = %s AND senha = %s
-                """
-                cursor.execute(query_simples, (login, senha))
-                resultado = cursor.fetchone()
-                
-                if resultado:
-                    # Mapear id_perfil para nome_perfil
-                    perfis = {1: 'Cliente', 2: 'Estúdio', 3: 'Admin'}
-                    nome_perfil = perfis.get(resultado[5], 'Desconhecido')
-                    
-                    return {
-                        'id_cliente': resultado[0],
-                        'nome': resultado[1],
-                        'email': resultado[2],
-                        'telefone': resultado[3],
-                        'cpf': resultado[4],
-                        'nome_perfil': nome_perfil,
-                        'id_perfil': resultado[5]
-                    }
-                    
-            except mysql.connector.Error as e3:
-                print(f"Terceira query também falhou: {e3}")
-                raise e3
+            cursor.execute(query, (login, senha))
+            resultado = cursor.fetchone()
             
+            if resultado:
+                return {
+                    'id_cliente': resultado[0],
+                    'nome': resultado[1],
+                    'email': resultado[2],
+                    'telefone': resultado[3],
+                    'cpf': resultado[4],
+                    'nome_perfil': resultado[5],
+                    'id_perfil': resultado[6]
+                }
             return None
             
         except Exception as e:
-            print(f"Erro geral na validação: {e}")
-            raise e
+            print(f"Erro na validação: {e}")
+            return None
     
-    def limpar_campos(self):
+    def mostrar_area_logado(self):
+        """Mostra a área do usuário logado"""
+        # Limpa a tela atual
+        for widget in self.root.winfo_children():
+            widget.destroy()
+        
+        self.root.geometry("500x400")
+        
+        # Header com informações do usuário
+        frame_header = tk.Frame(self.root, bg='#27ae60', height=80)
+        frame_header.pack(fill='x')
+        frame_header.pack_propagate(False)
+        
+        tk.Label(frame_header, text=f"Bem-vindo(a), {self.usuario_logado['nome']}!", 
+                font=('Arial', 16, 'bold'), 
+                bg='#27ae60', fg='white').pack(pady=10)
+        
+        tk.Label(frame_header, text=f"Perfil: {self.usuario_logado['nome_perfil']}", 
+                font=('Arial', 12), 
+                bg='#27ae60', fg='white').pack()
+        
+        # Frame principal
+        frame_main = tk.Frame(self.root, bg='#f0f0f0')
+        frame_main.pack(fill='both', expand=True, padx=20, pady=20)
+        
+        # Opções baseadas no perfil
+        self.criar_opcoes_perfil(frame_main)
+        
+        # Botão logout
+        btn_logout = tk.Button(frame_main, text="SAIR", 
+                              command=self.fazer_logout,
+                              bg='#e74c3c', fg='white',
+                              font=('Arial', 10, 'bold'),
+                              width=15, height=2)
+        btn_logout.pack(side='bottom', pady=20)
+    
+    def criar_opcoes_perfil(self, frame_parent):
+        """Cria opções específicas baseadas no perfil do usuário"""
+        perfil_id = self.usuario_logado['id_perfil']
+        
+        if perfil_id == 1:  # Cliente
+            tk.Label(frame_parent, text="ÁREA DO CLIENTE", 
+                    font=('Arial', 18, 'bold'), 
+                    bg='#f0f0f0', fg='#BA4467').pack(pady=20)
+            
+            btn_perfil = tk.Button(frame_parent, text="Meu Perfil", 
+                                  command=self.abrir_meu_perfil,
+                                  bg='#BA4467', fg='white',
+                                  font=('Arial', 12, 'bold'),
+                                  width=20, height=2)
+            btn_perfil.pack(pady=10)
+            
+            btn_buscar = tk.Button(frame_parent, text="Buscar Estúdios", 
+                                  command=self.buscar_estudios,
+                                  bg='#3498db', fg='white',
+                                  font=('Arial', 12, 'bold'),
+                                  width=20, height=2)
+            btn_buscar.pack(pady=10)
+            
+        elif perfil_id == 2:  # Estúdio
+            tk.Label(frame_parent, text="ÁREA DO ESTÚDIO", 
+                    font=('Arial', 18, 'bold'), 
+                    bg='#f0f0f0', fg='#e74c3c').pack(pady=20)
+            
+            btn_perfil = tk.Button(frame_parent, text="Meu Perfil", 
+                                  command=self.abrir_meu_perfil,
+                                  bg='#e74c3c', fg='white',
+                                  font=('Arial', 12, 'bold'),
+                                  width=20, height=2)
+            btn_perfil.pack(pady=10)
+            
+            btn_servicos = tk.Button(frame_parent, text="Meus Serviços", 
+                                    command=self.gerenciar_servicos,
+                                    bg='#f39c12', fg='white',
+                                    font=('Arial', 12, 'bold'),
+                                    width=20, height=2)
+            btn_servicos.pack(pady=10)
+            
+        elif perfil_id == 3:  # Admin
+            tk.Label(frame_parent, text="ÁREA ADMINISTRATIVA", 
+                    font=('Arial', 18, 'bold'), 
+                    bg='#f0f0f0', fg='#95a5a6').pack(pady=20)
+            
+            btn_admin_panel = tk.Button(frame_parent, text="Painel Administrativo", 
+                                       command=self.abrir_painel_admin,
+                                       bg='#95a5a6', fg='white',
+                                       font=('Arial', 12, 'bold'),
+                                       width=20, height=2)
+            btn_admin_panel.pack(pady=10)
+    
+    def abrir_meu_perfil(self):
+        """Abre tela de perfil do usuário"""
+        messagebox.showinfo("Em Desenvolvimento", 
+                           "Funcionalidade 'Meu Perfil' será implementada em breve!")
+    
+    def buscar_estudios(self):
+        """Abre tela de busca de estúdios para clientes"""
+        messagebox.showinfo("Em Desenvolvimento", 
+                           "Funcionalidade 'Buscar Estúdios' será implementada em breve!")
+    
+    def gerenciar_servicos(self):
+        """Abre tela de gerenciamento de serviços para estúdios"""
+        messagebox.showinfo("Em Desenvolvimento", 
+                           "Funcionalidade 'Meus Serviços' será implementada em breve!")
+    
+    def abrir_painel_admin(self):
+        """Abre painel administrativo"""
+        janela_admin = tk.Toplevel()
+        app_admin = AppAdmin(janela_admin)
+        janela_admin.protocol("WM_DELETE_WINDOW", 
+                             lambda: janela_admin.destroy())
+    
+    def fazer_logout(self):
+        """Faz logout do usuário"""
+        self.usuario_logado = None
+        
+        # Limpa a tela e recria interface inicial
+        for widget in self.root.winfo_children():
+            widget.destroy()
+        
+        self.root.geometry("450x600")
+        self.criar_interface()
+        messagebox.showinfo("Logout", "Logout realizado com sucesso!")
+    
+    def limpar_campos_login(self):
         """Limpa os campos de login"""
         self.entry_login.delete(0, tk.END)
         self.entry_senha.delete(0, tk.END)
-        self.entry_login.focus()
+        
+    def abrir_cadastro_cliente(self):
+        """Abre cadastro de cliente"""
+        self.root.withdraw()
+        janela_cliente = tk.Toplevel()
+        app_cliente = AppCliente(janela_cliente)
+        janela_cliente.protocol("WM_DELETE_WINDOW", self.fechar_janela_secundaria)
+        
+    def abrir_cadastro_estudio(self):
+        """Abre cadastro de estúdio"""
+        self.root.withdraw()
+        janela_estudio = tk.Toplevel()
+        app_estudio = AppEstudio(janela_estudio)
+        janela_estudio.protocol("WM_DELETE_WINDOW", self.fechar_janela_secundaria)
+        
+    def abrir_area_admin(self):
+        """Abre área administrativa com senha"""
+        senha = simpledialog.askstring("Acesso Restrito", 
+                                      "Digite a senha de administrador:", 
+                                      show='*')
+        
+        if senha == "admin123":
+            self.root.withdraw()
+            janela_admin = tk.Toplevel()
+            app_admin = AppAdmin(janela_admin)
+            janela_admin.protocol("WM_DELETE_WINDOW", self.fechar_janela_secundaria)
+        else:
+            messagebox.showerror("Erro", "Senha incorreta!")
+    
+    def fechar_janela_secundaria(self):
+        """Volta para tela principal ao fechar janela secundária"""
+        self.root.deiconify()
+        
+    def executar(self):
+        self.root.mainloop()
+
+if __name__ == "__main__":
+    app = AppPrincipal()
+    app.executar()
