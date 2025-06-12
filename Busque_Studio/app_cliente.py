@@ -3,6 +3,7 @@ from tkinter import ttk, messagebox
 import requests
 from cliente import Cliente
 from clienteDAO import ClienteDAO
+from clienteapp_dentro import ClienteAppDentro  # <- importa a próxima tela
 
 class AppCliente:
     def __init__(self, root):
@@ -95,6 +96,13 @@ class AppCliente:
                                width=15, height=2)
         btn_limpar.grid(row=1, column=0, pady=10)
 
+        # Botão CONTINUAR para ir para próxima tela
+        btn_continuar = tk.Button(frame_botoes, text="CONTINUAR",
+                                  command=self.continuar_para_dentro,
+                                  bg='#2980b9', fg='white',
+                                  font=('Arial', 12, 'bold'), width=25, height=2)
+        btn_continuar.grid(row=2, column=0, pady=10)
+
     def on_uf_selecionado(self, event):
         uf = self.combo_uf.get()
         estado = next((e for e in self.estados if e['sigla'] == uf), None)
@@ -134,10 +142,9 @@ class AppCliente:
         senha = self.entry_senha.get().strip() or None
         genero = self.combo_genero.get().strip() or None
 
-        # Criar cliente (exemplo, ajuste conforme sua classe Cliente)
         cliente = Cliente(
             id_perfil=self.perfil_id,
-            id_endereco=None,  # Aqui você pode integrar com o endereço real se quiser
+            id_endereco=None,
             nome=nome,
             dt_nasc=dt_nasc,
             genero=genero,
@@ -167,6 +174,27 @@ class AppCliente:
         self.combo_uf.set('')
         self.combo_cidade.set('')
         self.combo_genero.set('')
+
+    def continuar_para_dentro(self):
+        # Validação básica antes de continuar
+        nome = self.entry_nome.get().strip()
+        email = self.entry_email.get().strip()
+        cpf = self.entry_cpf.get().strip()
+        telefone = self.entry_telefone.get().strip()
+        uf = self.combo_uf.get().strip()
+        cidade = self.combo_cidade.get().strip()
+
+        if not (nome and email and cpf and telefone and uf and cidade):
+            messagebox.showwarning("Atenção", "Preencha todos os campos obrigatórios (*) antes de continuar!")
+            return
+
+        # Abrir a próxima tela
+        self.root.withdraw()  # esconde janela atual
+        nova_janela = tk.Toplevel()
+        ClienteAppDentro(nova_janela)
+
+        # Opcional: se quiser fechar a janela antiga ao invés de esconder, pode usar:
+        # self.root.destroy()
 
 if __name__ == "__main__":
     root = tk.Tk()
