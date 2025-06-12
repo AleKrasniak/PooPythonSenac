@@ -1,21 +1,97 @@
 import tkinter as tk
 from tkinter import messagebox
-from app_cliente import AppCliente
-from app_estudio import AppEstudio
-from app_admin import AppAdmin
-from clienteDAO import ClienteDAO
-from botao_voltar import criar_botao_voltar
-import mysql.connector
 import sys
+import traceback
+
+# Definir debug_print ANTES de usar
+def debug_print(msg):
+    print(f"[DEBUG] {msg}")
+    sys.stdout.flush()
+
+# Inicializar variáveis
+ClienteDAO = None
+AppCliente = None
+AppEstudio = None
+AppAdmin = None
+mysql = None
+
+# Imports com tratamento de erro
+try:
+    debug_print("Importando ClienteDAO...")
+    from clienteDAO import ClienteDAO
+    debug_print("✓ ClienteDAO importado")
+except ImportError as e:
+    debug_print(f"✗ Erro ao importar ClienteDAO: {e}")
+except Exception as e:
+    debug_print(f"✗ Erro inesperado ao importar ClienteDAO: {e}")
+
+try:
+    debug_print("Importando botao_voltar...")
+    from botao_voltar import criar_botao_voltar
+    debug_print("✓ botao_voltar importado")
+except ImportError as e:
+    debug_print(f"✗ Erro ao importar botao_voltar: {e}")
+    def criar_botao_voltar(janela, callback):
+        # Versão simplificada caso não encontre o módulo
+        frame = tk.Frame(janela, bg=janela.cget('bg'))
+        frame.pack(fill='x', pady=(10, 0))
+        btn = tk.Button(frame, text="← Voltar", command=callback,
+                       bg='#95a5a6', fg='white', font=('Arial', 10, 'bold'))
+        btn.pack(side='left', padx=20)
+
+try:
+    debug_print("Importando módulos de aplicação...")
+    from app_cliente import AppCliente
+    debug_print("✓ AppCliente importado")
+except ImportError as e:
+    debug_print(f"✗ Erro ao importar AppCliente: {e}")
+    AppCliente = None
+
+try:
+    from app_estudio import AppEstudio
+    debug_print("✓ AppEstudio importado")
+except ImportError as e:
+    debug_print(f"✗ Erro ao importar AppEstudio: {e}")
+    AppEstudio = None
+
+try:
+    from app_admin import AppAdmin
+    debug_print("✓ AppAdmin importado")
+except ImportError as e:
+    debug_print(f"✗ Erro ao importar AppAdmin: {e}")
+    AppAdmin = None
+
+try:
+    debug_print("Importando mysql.connector...")
+    import mysql.connector
+    debug_print("✓ mysql.connector importado")
+except ImportError as e:
+    debug_print(f"✗ Erro ao importar mysql.connector: {e}")
+    mysql = None
 
 class AppPrincipal:
     def __init__(self, parent):
+        debug_print("Inicializando AppPrincipal...")
         self.parent = parent
-        self.dao = ClienteDAO()
+        
+        # Inicializar DAO com tratamento de erro
+        try:
+            if ClienteDAO:
+                debug_print("Criando ClienteDAO...")
+                self.dao = ClienteDAO()
+                debug_print("✓ ClienteDAO criado")
+            else:
+                debug_print("⚠ ClienteDAO não disponível - modo demo")
+                self.dao = None
+        except Exception as e:
+            debug_print(f"✗ Erro ao criar ClienteDAO: {e}")
+            self.dao = None
 
         # Esconde janela principal ao abrir login
         self.parent.withdraw()
+        debug_print("Janela principal escondida")
 
+        debug_print("Criando janela de login...")
         self.janela = tk.Toplevel(parent)
         self.janela.title("BusqueStudios - Login")
         self.janela.geometry("600x500")
@@ -25,10 +101,12 @@ class AppPrincipal:
         self.janela.transient(parent)
         self.janela.grab_set()
 
+        debug_print("Criando interface...")
         self.criar_interface_login()
 
         # Ao fechar login, mostra a janela principal
         self.janela.protocol("WM_DELETE_WINDOW", self.fechar_login)
+        debug_print("AppPrincipal inicializado com sucesso")
 
     def centralizar_janela(self):
         self.janela.update_idletasks()
@@ -80,12 +158,19 @@ class AppPrincipal:
                                 cursor='hand2')
         btn_cancelar.grid(row=0, column=1, padx=15)
 
+        # Status para mostrar se está em modo demo
+        if not self.dao:
+            status = tk.Label(self.janela, text="MODO DEMO - Banco não conectado",
+                            font=('Arial', 10), bg='#34495e', fg='#f39c12')
+            status.pack(pady=10)
+
         self.entry_senha.bind('<Return>', lambda event: self.fazer_login())
         self.entry_login.bind('<Return>', lambda event: self.entry_senha.focus())
 
         self.entry_login.focus()
 
     def fazer_login(self):
+        debug_print("Tentando fazer login...")
         login = self.entry_login.get().strip()
         senha = self.entry_senha.get().strip()
 
@@ -94,21 +179,32 @@ class AppPrincipal:
             return
 
         try:
-            usuario = self.validar_credenciais(login, senha)
+            if self.dao:
+                debug_print("Validando credenciais no banco...")
+                usuario = self.validar_credenciais(login, senha)
+            else:
+                debug_print("Modo demo - simulando login...")
+                usuario = self.simular_login(login, senha)
 
             if usuario:
+                debug_print(f"Login bem-sucedido: {usuario}")
                 # Esconde a janela de login ao abrir perfil
                 self.janela.withdraw()
 
                 perfil = usuario['nome_perfil'].lower()
+                debug_print(f"Abrindo perfil: {perfil}")
 
                 # Abre a janela do perfil correto
-                if perfil == 'admin':
+                if perfil == 'admin' and AppAdmin:
                     janela_perfil = AppAdmin(self.janela)
-                elif perfil == 'estúdio':
+                elif perfil == 'estúdio' and AppEstudio:
                     janela_perfil = AppEstudio(self.janela)
-                else:
+                elif AppCliente:
                     janela_perfil = AppCliente(self.janela)
+                else:
+                    debug_print("Nenhuma classe de perfil disponível - abrindo demo")
+                    self.abrir_demo_perfil(usuario)
+                    return
 
                 # Quando a janela do perfil fechar, mostra a janela de login novamente
                 janela_perfil.janela.protocol("WM_DELETE_WINDOW", lambda: self.voltar_ao_login(janela_perfil))
@@ -118,9 +214,47 @@ class AppPrincipal:
                 self.limpar_campos()
 
         except Exception as e:
+            debug_print(f"Erro no login: {e}")
             messagebox.showerror("Erro", f"Erro ao fazer login: {str(e)}", parent=self.janela)
 
+    def simular_login(self, login, senha):
+        """Simulação de login quando não há banco"""
+        usuarios_demo = {
+            ("admin", "123"): {"nome_perfil": "admin", "nome": "Administrador Demo"},
+            ("cliente", "123"): {"nome_perfil": "cliente", "nome": "Cliente Demo"},
+            ("estudio", "123"): {"nome_perfil": "estúdio", "nome": "Estúdio Demo"}
+        }
+        
+        return usuarios_demo.get((login, senha))
+
+    def abrir_demo_perfil(self, usuario):
+        """Abre uma janela demo quando as classes de perfil não estão disponíveis"""
+        demo_window = tk.Toplevel(self.janela)
+        demo_window.title(f"Demo - {usuario['nome_perfil']}")
+        demo_window.geometry("400x300")
+        demo_window.configure(bg='#34495e')
+        
+        tk.Label(demo_window, text=f"PERFIL: {usuario['nome_perfil'].upper()}",
+                font=('Arial', 18, 'bold'), bg='#34495e', fg='white').pack(pady=30)
+        
+        tk.Label(demo_window, text=f"Usuário: {usuario['nome']}",
+                font=('Arial', 14), bg='#34495e', fg='white').pack(pady=10)
+        
+        tk.Label(demo_window, text="Modo demonstração\n(Classes de perfil não encontradas)",
+                font=('Arial', 12), bg='#34495e', fg='#f39c12').pack(pady=20)
+        
+        tk.Button(demo_window, text="VOLTAR", 
+                 command=lambda: self.voltar_demo(demo_window),
+                 bg='#3498db', fg='white', font=('Arial', 12, 'bold')).pack(pady=20)
+
+    def voltar_demo(self, demo_window):
+        demo_window.destroy()
+        self.janela.deiconify()
+
     def validar_credenciais(self, login, senha):
+        if not self.dao or not self.dao.cursor:
+            return None
+            
         cursor = self.dao.cursor
 
         try:
@@ -147,7 +281,7 @@ class AppPrincipal:
 
             return None
         except Exception as e:
-            print(f"Erro na validação: {e}")
+            debug_print(f"Erro na validação: {e}")
             raise e
 
     def limpar_campos(self):
@@ -162,5 +296,6 @@ class AppPrincipal:
 
     def fechar_login(self):
         """Ao fechar a janela login, encerra a aplicação"""
+        debug_print("Fechando aplicação...")
         self.janela.destroy()
-        self.parent.quit()  # Mudança aqui: usar quit() ao invés de deiconify()
+        self.parent.quit()
