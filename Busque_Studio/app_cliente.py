@@ -3,7 +3,7 @@ from tkinter import ttk, messagebox
 import requests
 from cliente import Cliente
 from clienteDAO import ClienteDAO
-from clienteapp_dentro import ClienteAppDentro  # <- importa a próxima tela
+# from clienteapp_dentro import ClienteAppDentro  # <- importa a próxima tela
 
 class AppCliente:
     def __init__(self, root):
@@ -189,9 +189,9 @@ class AppCliente:
             return
 
         # Abrir a próxima tela
-        self.root.withdraw()  # esconde janela atual
-        nova_janela = tk.Toplevel()
-        ClienteAppDentro(nova_janela)
+        # self.root.withdraw()  # esconde janela atual
+        # nova_janela = tk.Toplevel()
+        # ClienteAppDentro(nova_janela)
 
         # Opcional: se quiser fechar a janela antiga ao invés de esconder, pode usar:
         # self.root.destroy()

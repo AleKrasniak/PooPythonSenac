@@ -4,9 +4,11 @@ from app_cliente import AppCliente
 from app_estudio import AppEstudio
 from app_admin import AppAdmin
 from clienteDAO import ClienteDAO
+from app_login import AppLogin
 from botao_voltar import criar_botao_voltar
+import mysql.connector
 
-class AppLogin:
+class AppPrincipal:
     def __init__(self, parent):
         self.parent = parent
         self.dao = ClienteDAO()
@@ -167,5 +169,5 @@ class AppLogin:
 if __name__ == "__main__":
     root = tk.Tk()
     root.withdraw()  # Esconde janela principal
-    app_login = AppLogin(root)
+    app_login = AppPrincipal(root)
     root.mainloop()

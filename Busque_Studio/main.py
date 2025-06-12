@@ -2,7 +2,7 @@
 from app_principal import AppPrincipal
 
 def main():
-    """Função principal para iniciar o sistema"""
+
     try:
         print("Iniciando BusqueStudios...")
         print("=" * 50)
