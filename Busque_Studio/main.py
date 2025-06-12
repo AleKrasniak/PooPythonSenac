@@ -220,7 +220,8 @@ class AppPrincipal:
     def simular_login(self, login, senha):
         """Simulação de login quando não há banco"""
         usuarios_demo = {
-            ("admin", "123"): {"nome_perfil": "admin", "nome": "Administrador Demo"},
+            ("admin", "123"): {"nome_perfil": "admin", "nome"
+            : "Administrador Demo"},
             ("cliente", "123"): {"nome_perfil": "cliente", "nome": "Cliente Demo"},
             ("estudio", "123"): {"nome_perfil": "estúdio", "nome": "Estúdio Demo"}
         }
