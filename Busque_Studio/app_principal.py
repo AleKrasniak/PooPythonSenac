@@ -4,7 +4,6 @@ from app_cliente import AppCliente
 from app_estudio import AppEstudio
 from app_admin import AppAdmin
 from clienteDAO import ClienteDAO
-from app_login import AppLogin
 from botao_voltar import criar_botao_voltar
 import mysql.connector
 import sys
@@ -164,11 +163,4 @@ class AppPrincipal:
     def fechar_login(self):
         """Ao fechar a janela login, encerra a aplicação"""
         self.janela.destroy()
-        self.parent.deiconify()
-
-
-if __name__ == "__main__":
-    root = tk.Tk()
-    root.withdraw()  # Esconde janela principal
-    app_login = AppPrincipal(root)
-    root.mainloop()
+        self.parent.quit()  # Mudança aqui: usar quit() ao invés de deiconify()
