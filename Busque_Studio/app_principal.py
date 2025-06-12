@@ -7,6 +7,7 @@ from clienteDAO import ClienteDAO
 from app_login import AppLogin
 from botao_voltar import criar_botao_voltar
 import mysql.connector
+import sys
 
 class AppPrincipal:
     def __init__(self, parent):
