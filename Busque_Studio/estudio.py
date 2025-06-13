@@ -5,7 +5,7 @@ from perfil import Perfil
 from endereco import Endereco 
 
 class Estudio:
-    def __init__(self, id_estudio=None, id_perfil=None, id_endereco=None, nome="", cnpj="", descricao="", login="", senha="", tipo="" ):
+    def __init__(self, id_estudio=None, id_perfil=None, id_endereco=None, nome="", cnpj="", descricao="", login="", senha="", tipo="", foto_perfil=""):
         self.id_estudio = id_estudio
         self.id_perfil = id_perfil
         self.id_endereco = id_endereco
@@ -15,6 +15,7 @@ class Estudio:
         self.login = login
         self.senha = senha
         self.tipo = tipo
+        self.foto_perfil = foto_perfil
 
 
 

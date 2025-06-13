@@ -14,8 +14,8 @@ class EstudioDAO:
         self.cursor = self.conexao.cursor()
 
         def criar(self, estudio):
-            sql= "INSERT INTO estudio (id_perfil, id_endereco, nome, cnpj, descricao, login, senha, tipo) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
-            self.cursor.execute(sql, (estudio.id_perfil, estudio.id_endereco, estudio.nome, estudio.cnpj, estudio.descricao, estudio.login, estudio.senha, estudio.tipo ))
+            sql= "INSERT INTO estudio (id_perfil, id_endereco, nome, cnpj, descricao, login, senha, tipo, foto_perfil) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
+            self.cursor.execute(sql, (estudio.id_perfil, estudio.id_endereco, estudio.nome, estudio.cnpj, estudio.descricao, estudio.login, estudio.senha, estudio.tipo, estudio.foto_perfil ))
             self.conexao.commit()
         
         def listar(self):
@@ -23,8 +23,8 @@ class EstudioDAO:
             return self.cursor.fetchall()
         
         def atualizar(self, estudio):
-            sql = "UPDATE estudio SET id_perfil = %s, id_endereco = %s, nome = %s, cnpj = %s, descricao = %s, login = %s, senha = %s, tipo = %s WHERE id_cliente = %s"
-            self.cursor.execute(sql,(estudio.id_perfil, estudio.id_endereco, estudio.nome, estudio.cnpj, estudio.descricao, estudio.login, estudio.senha, estudio.tipo))
+            sql = "UPDATE estudio SET id_perfil = %s, id_endereco = %s, nome = %s, cnpj = %s, descricao = %s, login = %s, senha = %s, tipo = %s, foto_perfil=%s WHERE id_cliente = %s"
+            self.cursor.execute(sql,(estudio.id_perfil, estudio.id_endereco, estudio.nome, estudio.cnpj, estudio.descricao, estudio.login, estudio.senha, estudio.tipo, estudio.foto_perfil))
             self.conexao.commit()
 
         def deletar(self, id_estudio):

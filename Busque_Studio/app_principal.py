@@ -143,34 +143,89 @@ class AppPrincipal:
                 
         except Exception as e:
             messagebox.showerror("Erro", f"Erro ao fazer login: {str(e)}")
-    
+
     def validar_credenciais(self, login, senha):
         """Valida as credenciais do usuário no banco de dados"""
         try:
             cursor = self.dao.cursor
             
-            # Query para buscar usuário com login e senha
-            query = """
-                SELECT c.id_cliente, c.nome, c.email, c.telefone, c.cpf, 
-                       p.nome_perfil, c.id_perfil
-                FROM cliente c
-                INNER JOIN perfil p ON c.id_perfil = p.id_perfil
-                WHERE c.login = %s AND c.senha = %s
+            # 1. PRIMEIRO: Buscar na tabela ADMINISTRADOR
+            query_admin = """
+                SELECT a.id_administrador as id, a.nome, a.email, 
+                       '' as telefone, '' as cpf,
+                       p.nome as nome_perfil, a.id_perfil,
+                       'administrador' as tipo_usuario
+                FROM administrador a
+                INNER JOIN perfil p ON a.id_perfil = p.id_perfil
+                WHERE a.login = %s AND a.senha = %s
             """
             
-            cursor.execute(query, (login, senha))
+            cursor.execute(query_admin, (login, senha))
             resultado = cursor.fetchone()
             
             if resultado:
                 return {
-                    'id_cliente': resultado[0],
+                    'id': resultado[0],
                     'nome': resultado[1],
                     'email': resultado[2],
                     'telefone': resultado[3],
                     'cpf': resultado[4],
                     'nome_perfil': resultado[5],
-                    'id_perfil': resultado[6]
+                    'id_perfil': resultado[6],
+                    'tipo_usuario': resultado[7]
                 }
+            
+            # 2. SE NÃO ACHOU ADMIN: Buscar na tabela CLIENTE
+            query_cliente = """
+                SELECT c.id_cliente as id, c.nome, c.email, c.telefone, c.cpf, 
+                       p.nome as nome_perfil, c.id_perfil,
+                       'cliente' as tipo_usuario
+                FROM cliente c
+                INNER JOIN perfil p ON c.id_perfil = p.id_perfil
+                WHERE c.login = %s AND c.senha = %s
+            """
+            
+            cursor.execute(query_cliente, (login, senha))
+            resultado = cursor.fetchone()
+            
+            if resultado:
+                return {
+                    'id': resultado[0],
+                    'nome': resultado[1],
+                    'email': resultado[2],
+                    'telefone': resultado[3],
+                    'cpf': resultado[4],
+                    'nome_perfil': resultado[5],
+                    'id_perfil': resultado[6],
+                    'tipo_usuario': resultado[7]
+                }
+            
+            # 3. SE NÃO ACHOU NEM ADMIN NEM CLIENTE: Buscar na tabela ESTUDIO
+            query_estudio = """
+                SELECT e.id_estudio as id, e.nome_estudio as nome, e.email, 
+                       e.telefone, e.cnpj as cpf,
+                       p.nome as nome_perfil, e.id_perfil,
+                       'estudio' as tipo_usuario
+                FROM estudio e
+                INNER JOIN perfil p ON e.id_perfil = p.id_perfil
+                WHERE e.login = %s AND e.senha = %s
+            """
+            
+            cursor.execute(query_estudio, (login, senha))
+            resultado = cursor.fetchone()
+            
+            if resultado:
+                return {
+                    'id': resultado[0],
+                    'nome': resultado[1],
+                    'email': resultado[2],
+                    'telefone': resultado[3],
+                    'cpf': resultado[4],
+                    'nome_perfil': resultado[5],
+                    'id_perfil': resultado[6],
+                    'tipo_usuario': resultado[7]
+                }
+            
             return None
             
         except Exception as e:
@@ -216,8 +271,37 @@ class AppPrincipal:
     def criar_opcoes_perfil(self, frame_parent):
         """Cria opções específicas baseadas no perfil do usuário"""
         perfil_id = self.usuario_logado['id_perfil']
+        tipo_usuario = self.usuario_logado.get('tipo_usuario', 'cliente')
         
-        if perfil_id == 1:  # Cliente
+        # ADMINISTRADOR
+        if tipo_usuario == 'administrador' or perfil_id == 1:  # Assumindo que perfil 1 é admin
+            tk.Label(frame_parent, text="ÁREA ADMINISTRATIVA", 
+                    font=('Arial', 18, 'bold'), 
+                    bg='#f0f0f0', fg='#95a5a6').pack(pady=20)
+            
+            btn_usuarios = tk.Button(frame_parent, text="Gerenciar Usuários", 
+                                   command=self.gerenciar_usuarios,
+                                   bg='#95a5a6', fg='white',
+                                   font=('Arial', 12, 'bold'),
+                                   width=20, height=2)
+            btn_usuarios.pack(pady=10)
+            
+            btn_estudios = tk.Button(frame_parent, text="Aprovar Estúdios", 
+                                   command=self.aprovar_estudios,
+                                   bg='#34495e', fg='white',
+                                   font=('Arial', 12, 'bold'),
+                                   width=20, height=2)
+            btn_estudios.pack(pady=10)
+            
+            btn_relatorios = tk.Button(frame_parent, text="Relatórios", 
+                                     command=self.gerar_relatorios,
+                                     bg='#7f8c8d', fg='white',
+                                     font=('Arial', 12, 'bold'),
+                                     width=20, height=2)
+            btn_relatorios.pack(pady=10)
+        
+        # CLIENTE
+        elif tipo_usuario == 'cliente':
             tk.Label(frame_parent, text="ÁREA DO CLIENTE", 
                     font=('Arial', 18, 'bold'), 
                     bg='#f0f0f0', fg='#BA4467').pack(pady=20)
@@ -235,8 +319,9 @@ class AppPrincipal:
                                   font=('Arial', 12, 'bold'),
                                   width=20, height=2)
             btn_buscar.pack(pady=10)
-            
-        elif perfil_id == 2:  # Estúdio
+        
+        # ESTÚDIO
+        elif tipo_usuario == 'estudio':
             tk.Label(frame_parent, text="ÁREA DO ESTÚDIO", 
                     font=('Arial', 18, 'bold'), 
                     bg='#f0f0f0', fg='#e74c3c').pack(pady=20)
@@ -254,19 +339,20 @@ class AppPrincipal:
                                     font=('Arial', 12, 'bold'),
                                     width=20, height=2)
             btn_servicos.pack(pady=10)
-            
-        elif perfil_id == 3:  # Admin
-            tk.Label(frame_parent, text="ÁREA ADMINISTRATIVA", 
-                    font=('Arial', 18, 'bold'), 
-                    bg='#f0f0f0', fg='#95a5a6').pack(pady=20)
-            
-            btn_admin_panel = tk.Button(frame_parent, text="Painel Administrativo", 
-                                       command=self.abrir_painel_admin,
-                                       bg='#95a5a6', fg='white',
-                                       font=('Arial', 12, 'bold'),
-                                       width=20, height=2)
-            btn_admin_panel.pack(pady=10)
-    
+
+    # Métodos para as funcionalidades do admin
+    def gerenciar_usuarios(self):
+        """Abre tela de gerenciamento de usuários"""
+        messagebox.showinfo("Admin", "Funcionalidade 'Gerenciar Usuários' em desenvolvimento!")
+
+    def aprovar_estudios(self):
+        """Abre tela de aprovação de estúdios"""
+        messagebox.showinfo("Admin", "Funcionalidade 'Aprovar Estúdios' em desenvolvimento!")
+
+    def gerar_relatorios(self):
+        """Abre tela de relatórios"""
+        messagebox.showinfo("Admin", "Funcionalidade 'Relatórios' em desenvolvimento!")
+        
     def abrir_meu_perfil(self):
         """Abre tela de perfil do usuário"""
         messagebox.showinfo("Em Desenvolvimento", 
@@ -326,7 +412,7 @@ class AppPrincipal:
                                       "Digite a senha de administrador:", 
                                       show='*')
         
-        if senha == "admin123":
+        if senha == "123":
             self.root.withdraw()
             janela_admin = tk.Toplevel()
             app_admin = AppAdmin(janela_admin)

@@ -1,7 +1,8 @@
 import tkinter as tk
 from tkinter import messagebox
 import mysql.connector
-
+from perfil import Perfil
+from endereco import Endereco
 
 class ClienteDAO:
     def __init__(self):
@@ -23,15 +24,35 @@ class ClienteDAO:
         return self.cursor.fetchall()
     
     def atualizar(self, cliente):
-        # CORRIGIDO: Estava faltando %s para dt_nasc e tinha vírgula no lugar errado
         sql = "UPDATE cliente SET id_perfil = %s, id_endereco = %s, nome = %s, dt_nasc = %s, genero = %s, telefone = %s, cpf = %s, email = %s, login = %s, senha = %s WHERE id_cliente = %s"
         self.cursor.execute(sql, (cliente.id_perfil, cliente.id_endereco, cliente.nome, cliente.dt_nasc, cliente.genero, cliente.telefone, cliente.cpf, cliente.email, cliente.login, cliente.senha, cliente.id_cliente))
-        self.conexao.commit()  # CORRIGIDO: Estava faltando os parênteses
+        self.conexao.commit()
 
     def deletar(self, id_cliente):
         sql = "DELETE FROM cliente WHERE id_cliente = %s"
-        self.cursor.execute(sql, (id_cliente,))  # CORRIGIDO: Estava escrito "execure" em vez de "execute"
+        self.cursor.execute(sql, (id_cliente,))
         self.conexao.commit()
+
+    def buscar_cliente_com_endereco(self, id_cliente):
+        """Método para buscar cliente com dados do endereço (incluindo UF)"""
+        sql = """
+        SELECT c.*, e.uf, e.cidade, e.bairro, e.rua, e.numero, e.cep 
+        FROM cliente c 
+        LEFT JOIN endereco e ON c.id_endereco = e.id_endereco 
+        WHERE c.id_cliente = %s
+        """
+        self.cursor.execute(sql, (id_cliente,))
+        return self.cursor.fetchone()
+
+    def listar_clientes_com_endereco(self):
+        """Método para listar todos os clientes com dados do endereço (incluindo UF)"""
+        sql = """
+        SELECT c.*, e.uf, e.cidade, e.bairro, e.rua, e.numero, e.cep 
+        FROM cliente c 
+        LEFT JOIN endereco e ON c.id_endereco = e.id_endereco
+        """
+        self.cursor.execute(sql)
+        return self.cursor.fetchall()
 
     def buscar_por_login(self, login, senha):
         """Método para buscar cliente por login e senha"""
@@ -45,18 +66,3 @@ class ClienteDAO:
             self.cursor.close()
         if self.conexao:
             self.conexao.close()
-
-
-class Cliente:
-    def __init__(self, id_cliente=None, id_perfil=None, id_endereco=None, nome="", dt_nasc="", genero="", telefone="", cpf="", email="", login="", senha=""):
-        self.id_cliente = id_cliente
-        self.id_perfil = id_perfil
-        self.id_endereco = id_endereco
-        self.nome = nome
-        self.dt_nasc = dt_nasc
-        self.genero = genero
-        self.telefone = telefone 
-        self.cpf = cpf 
-        self.email = email
-        self.login = login
-        self.senha = senha
