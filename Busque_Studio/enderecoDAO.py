@@ -11,16 +11,19 @@ class EnderecoDAO:
             password="",
             database="busquestudios2"
         )
-        self.cursor = self.conexao.cursor()  # CORRETO AQUI ✅
+        self.cursor = self.conexao.cursor()
 
     def criar(self, endereco):
-        sql = "INSERT INTO endereco (rua, numero, bairro, cidade, complemento, uf, cep, data_cadastro, data_atualizacao) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
+        sql = """INSERT INTO endereco 
+                (rua, numero, bairro, cidade, complemento, uf, cep, data_cadastro, data_atualizacao) 
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"""
         self.cursor.execute(sql, (
             endereco.rua, endereco.numero, endereco.bairro, endereco.cidade,
             endereco.complemento, endereco.uf, endereco.cep,
             endereco.data_cadastro, endereco.data_atualizacao
         ))
         self.conexao.commit()
+        return self.cursor.lastrowid 
 
     def listar(self):
         self.cursor.execute("SELECT * FROM endereco")
