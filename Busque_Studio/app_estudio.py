@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 import requests
 from datetime import datetime
-from estudiodao import EstudioDAO
+from estudioDAO import EstudioDAO
 from typing import Optional
 
 class AppEstudio:

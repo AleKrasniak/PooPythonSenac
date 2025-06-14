@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import messagebox, simpledialog, ttk
 import mysql.connector
 from clienteDAO import ClienteDAO
-from estudiodao import EstudioDAO
+from estudioDAO import EstudioDAO
 import sys
 from pathlib import Path
 sys.path.append(str(Path(__file__).parent))  # Garante que o Python procure no diretório atual
