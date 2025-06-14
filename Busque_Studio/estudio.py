@@ -3,6 +3,9 @@ from tkinter import messagebox
 from datetime import datetime
 from typing import Dict, List, Optional
 
+from datetime import datetime
+from typing import Dict, Optional
+
 class Estudio:
     def __init__(self, id_estudio: Optional[int] = None, 
                  id_perfil: Optional[int] = None, 
@@ -12,21 +15,11 @@ class Estudio:
                  login: str = "", 
                  senha: str = "", 
                  tipo: str = "", 
+                 email: str = "",
+                 telefone: str = "",
+                 foto_perfil: str = "",
                  endereco_data: Optional[Dict] = None):
-        """
-        Classe que representa um estúdio artístico
         
-        Args:
-            id_estudio: ID único do estúdio
-            id_perfil: ID do perfil associado
-            nome: Nome do estúdio
-            cnpj: CNPJ do estúdio (14 dígitos)
-            descricao: Descrição do estúdio
-            login: Login para acesso
-            senha: Senha para acesso
-            tipo: Tipo de estúdio (ex: Tatuagem, Fotografia)
-            endereco_data: Dados do endereço em formato de dicionário
-        """
         self.id_estudio = id_estudio
         self.id_perfil = id_perfil
         self.nome = nome
@@ -35,6 +28,9 @@ class Estudio:
         self.login = login
         self.senha = senha
         self.tipo = tipo
+        self.email = email
+        self.telefone = telefone
+        self.foto_perfil = foto_perfil
         self.endereco_data = endereco_data or {
             'rua': '',
             'numero': 0,
@@ -47,16 +43,23 @@ class Estudio:
             'data_atualizacao': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         }
 
-    def __str__(self) -> str:
-        """Representação em string do objeto Estudio"""
-        return (f"Estudio(id={self.id_estudio}, nome='{self.nome}', "
-                f"cnpj='{self.cnpj}', tipo='{self.tipo}')")
-
     def validar(self) -> bool:
-        """Valida se os dados do estúdio são válidos"""
-        if not all([self.nome, self.cnpj, self.login, self.senha, self.tipo]):
-            return False
+        campos_obrigatorios = [
+            self.nome,
+            self.cnpj,
+            self.login,
+            self.senha,
+            self.tipo,
+            self.email,
+            self.telefone,
+            self.endereco_data.get('cidade'),
+            self.endereco_data.get('uf'),
+            self.endereco_data.get('cep')
+        ]
         
+        if not all(campos_obrigatorios):
+            return False
+            
         if len(self.cnpj) != 14 or not self.cnpj.isdigit():
             return False
             

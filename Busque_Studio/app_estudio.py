@@ -1,8 +1,9 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
+import requests
 from datetime import datetime
-from dao.estudio_dao import EstudioDAO
-from models.estudio import Estudio
+from estudiodao import EstudioDAO
+from typing import Optional
 
 class AppEstudio:
     def __init__(self, root):
@@ -12,12 +13,43 @@ class AppEstudio:
         self.root.configure(bg='#f0f0f0')
 
         self.estudio_dao = EstudioDAO()
-        self.perfil_id = 3  # ID para perfil de estúdio
-        self.perfil_nome = "Estúdio"
-
+        self.perfil_id = 3
+        self.estados = self.carregar_ufs()
         self.criar_interface()
 
+    def carregar_ufs(self):
+        """Carrega a lista de UFs da API do IBGE"""
+        url = "https://servicodados.ibge.gov.br/api/v1/localidades/estados"
+        try:
+            resposta = requests.get(url, timeout=5)
+            resposta.raise_for_status()
+            estados = resposta.json()
+            estados.sort(key=lambda e: e['nome'])
+            return estados
+        except Exception as e:
+            messagebox.showerror("Erro", f"Falha ao carregar estados: {e}")
+            return []
+
+    def on_uf_selecionado(self, event):
+        """Carrega as cidades quando um estado é selecionado"""
+        uf = self.combo_uf.get()
+        estado = next((e for e in self.estados if e['sigla'] == uf), None)
+        if not estado:
+            self.combo_cidade['values'] = []
+            return
+        
+        url = f"https://servicodados.ibge.gov.br/api/v1/localidades/estados/{estado['id']}/municipios"
+        try:
+            resposta = requests.get(url, timeout=5)
+            resposta.raise_for_status()
+            cidades = [cidade['nome'] for cidade in resposta.json()]
+            cidades.sort()
+            self.combo_cidade['values'] = cidades
+        except Exception as e:
+            messagebox.showerror("Erro", f"Falha ao carregar cidades: {e}")
+
     def criar_interface(self):
+        """Cria a interface gráfica do aplicativo"""
         # Frame principal com scrollbar
         main_frame = tk.Frame(self.root, bg='#f0f0f0')
         main_frame.pack(fill='both', expand=True)
@@ -26,13 +58,7 @@ class AppEstudio:
         scrollbar = ttk.Scrollbar(main_frame, orient="vertical", command=canvas.yview)
         scrollable_frame = tk.Frame(canvas, bg='#f0f0f0')
 
-        scrollable_frame.bind(
-            "<Configure>",
-            lambda e: canvas.configure(
-                scrollregion=canvas.bbox("all")
-            )
-        )
-
+        scrollable_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
         canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
         canvas.configure(yscrollcommand=scrollbar.set)
 
@@ -40,21 +66,19 @@ class AppEstudio:
         scrollbar.pack(side="right", fill="y")
 
         # Título
-        titulo = tk.Label(scrollable_frame, text="CADASTRO DE ESTÚDIO",
-                         font=('Arial', 16, 'bold'), bg='#f0f0f0', fg='#333')
-        titulo.pack(pady=10)
+        tk.Label(scrollable_frame, text="CADASTRO DE ESTÚDIO", font=('Arial', 16, 'bold'), 
+                bg='#f0f0f0', fg='#333').pack(pady=10)
 
-        # Frame para campos do formulário
+        # Campos do formulário
         frame_campos = tk.Frame(scrollable_frame, bg='#f0f0f0')
         frame_campos.pack(pady=10, padx=20, fill='x')
 
-        # Campos do formulário
         campos = [
             ("Nome do Estúdio *:", "entry_nome"),
-            ("CNPJ * (somente números):", "entry_cnpj"),
+            ("CNPJ * (14 dígitos):", "entry_cnpj"),
             ("Email *:", "entry_email"),
             ("Telefone *:", "entry_telefone"),
-            ("Descrição:", "text_descricao"),  # Text area para descrição
+            ("Descrição:", "text_descricao"),
             ("CEP * (12345-678):", "entry_cep"),
             ("Rua:", "entry_rua"),
             ("Número:", "entry_numero"),
@@ -63,7 +87,7 @@ class AppEstudio:
             ("Login *:", "entry_login"),
             ("Senha *:", "entry_senha", True),
             ("Confirme a Senha *:", "entry_confirmar_senha", True),
-            ("URL da Foto de Perfil:", "entry_foto_perfil")
+            ("URL da Foto:", "entry_foto_perfil")
         ]
 
         row = 0
@@ -71,12 +95,10 @@ class AppEstudio:
             tk.Label(frame_campos, text=label, bg='#f0f0f0').grid(row=row, column=0, sticky='w', pady=3)
             
             if attr == "text_descricao":
-                # Área de texto para descrição
                 text = tk.Text(frame_campos, width=40, height=4)
                 text.grid(row=row, column=1, pady=3, padx=5)
                 setattr(self, attr, text)
             else:
-                # Campo de entrada normal
                 entry = tk.Entry(frame_campos, width=40, show='*' if senha else '')
                 entry.grid(row=row, column=1, pady=3, padx=5)
                 setattr(self, attr, entry)
@@ -85,11 +107,10 @@ class AppEstudio:
 
         # Combobox para UF
         tk.Label(frame_campos, text="UF *:", bg='#f0f0f0').grid(row=row, column=0, sticky='w', pady=3)
-        self.combo_uf = ttk.Combobox(frame_campos, values=['AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 
-                                                         'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 
-                                                         'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'], 
+        self.combo_uf = ttk.Combobox(frame_campos, values=[e['sigla'] for e in self.estados], 
                                     width=10, state='readonly')
         self.combo_uf.grid(row=row, column=1, sticky='w', pady=3, padx=5)
+        self.combo_uf.bind("<<ComboboxSelected>>", self.on_uf_selecionado)
         row += 1
 
         # Combobox para Cidade
@@ -98,11 +119,11 @@ class AppEstudio:
         self.combo_cidade.grid(row=row, column=1, sticky='w', pady=3, padx=5)
         row += 1
 
-        # Combobox para Tipo de Estúdio
-        tk.Label(frame_campos, text="Tipo de Estúdio *:", bg='#f0f0f0').grid(row=row, column=0, sticky='w', pady=3)
+        # Combobox para Tipo
+        tk.Label(frame_campos, text="Tipo *:", bg='#f0f0f0').grid(row=row, column=0, sticky='w', pady=3)
         self.combo_tipo = ttk.Combobox(frame_campos, 
-                                      values=['Tatuagem', 'Fotografia', 'Música', 'Arte', 'Design', 'Áudio', 'Vídeo'], 
-                                      width=37, state='readonly')
+                                     values=['Tatuagem', 'Fotografia', 'Música', 'Arte', 'Design', 'Áudio', 'Vídeo'], 
+                                     width=37, state='readonly')
         self.combo_tipo.grid(row=row, column=1, sticky='w', pady=3, padx=5)
         row += 1
 
@@ -110,21 +131,16 @@ class AppEstudio:
         frame_botoes = tk.Frame(scrollable_frame, bg='#f0f0f0')
         frame_botoes.pack(pady=20)
 
-        btn_cadastrar = tk.Button(frame_botoes, text="CADASTRAR ESTÚDIO",
-                                 command=self.criar_estudio,
-                                 bg='#e74c3c', fg='white',
-                                 font=('Arial', 12, 'bold'), 
-                                 width=25, height=2)
-        btn_cadastrar.grid(row=0, column=0, padx=5)
+        tk.Button(frame_botoes, text="CADASTRAR", command=self.cadastrar_estudio,
+                 bg='#e74c3c', fg='white', font=('Arial', 12, 'bold'), 
+                 width=25, height=2).grid(row=0, column=0, padx=5)
 
-        btn_limpar = tk.Button(frame_botoes, text="LIMPAR CAMPOS", 
-                              command=self.limpar_campos,
-                              bg='#607D8B', fg='white', 
-                              font=('Arial', 10, 'bold'),
-                              width=15, height=2)
-        btn_limpar.grid(row=1, column=0, pady=10)
+        tk.Button(frame_botoes, text="LIMPAR", command=self.limpar_campos,
+                 bg='#607D8B', fg='white', font=('Arial', 10, 'bold'),
+                 width=15, height=2).grid(row=1, column=0, pady=10)
 
-    def validar_cep(self, cep):
+    def validar_cep(self, cep: str) -> Optional[str]:
+        """Valida e formata o CEP"""
         cep = cep.strip()
         if len(cep) == 8 and cep.isdigit():
             return f"{cep[:5]}-{cep[5:]}"
@@ -132,7 +148,8 @@ class AppEstudio:
             return cep
         return None
 
-    def criar_estudio(self):
+    def cadastrar_estudio(self):
+        """Realiza o cadastro de um novo estúdio"""
         try:
             # Obter valores dos campos
             nome = self.entry_nome.get().strip()
@@ -140,7 +157,7 @@ class AppEstudio:
             email = self.entry_email.get().strip()
             telefone = self.entry_telefone.get().strip()
             descricao = self.text_descricao.get("1.0", tk.END).strip()
-            cep = self.entry_cep.get().strip()
+            cep = self.validar_cep(self.entry_cep.get().strip())
             rua = self.entry_rua.get().strip()
             numero = self.entry_numero.get().strip()
             bairro = self.entry_bairro.get().strip()
@@ -153,103 +170,61 @@ class AppEstudio:
             confirmar_senha = self.entry_confirmar_senha.get().strip()
             foto_perfil = self.entry_foto_perfil.get().strip()
 
-            # Validação de campos obrigatórios
-            campos_obrigatorios = [
-                (nome, "Nome do Estúdio"),
-                (cnpj, "CNPJ"),
-                (email, "Email"),
-                (telefone, "Telefone"),
-                (cep, "CEP"),
-                (uf, "UF"),
-                (cidade, "Cidade"),
-                (tipo, "Tipo de Estúdio"),
-                (login, "Login"),
-                (senha, "Senha"),
-                (confirmar_senha, "Confirmação de Senha")
-            ]
+            # Validações básicas
+            if not all([nome, cnpj, email, telefone, cep, uf, cidade, tipo, login, senha]):
+                raise ValueError("Preencha todos os campos obrigatórios (*)")
 
-            # Verifica campos vazios
-            campos_faltando = [nome for valor, nome in campos_obrigatorios if not valor]
-            if campos_faltando:
-                messagebox.showwarning("Atenção", f"Preencha os campos obrigatórios:\n{', '.join(campos_faltando)}")
-                return
-
-            # Validação de CNPJ (14 dígitos)
             if len(cnpj) != 14 or not cnpj.isdigit():
-                messagebox.showwarning("Atenção", "CNPJ inválido. Deve conter 14 dígitos numéricos.")
-                return
+                raise ValueError("CNPJ deve ter 14 dígitos numéricos")
 
-            # Validação de CEP
-            cep_formatado = self.validar_cep(cep)
-            if not cep_formatado:
-                messagebox.showwarning("Atenção", "CEP inválido. Formato correto: 12345-678 ou 12345678")
-                return
+            if not cep:
+                raise ValueError("CEP inválido. Formato: 12345-678 ou 12345678")
 
-            # Validação de senha
             if len(senha) < 6:
-                messagebox.showwarning("Atenção", "A senha deve ter pelo menos 6 caracteres")
-                return
-                
+                raise ValueError("Senha deve ter pelo menos 6 caracteres")
+
             if senha != confirmar_senha:
-                messagebox.showwarning("Atenção", "As senhas não coincidem")
-                return
+                raise ValueError("As senhas não coincidem")
 
-            # Verificar se login já existe
+            # Verifica se login já existe
             if self.estudio_dao.buscar_por_login(login):
-                messagebox.showwarning("Atenção", "Este login já está em uso. Escolha outro.")
-                return
+                raise ValueError("Login já está em uso")
 
-            # Criar objeto Estudio
-            estudio = Estudio()
-            estudio.id_perfil = self.perfil_id
-            estudio.nome = nome
-            estudio.cnpj = cnpj
-            estudio.descricao = descricao
-            estudio.login = login
-            estudio.senha = senha
-            estudio.tipo = tipo
-            estudio.foto_perfil = foto_perfil if foto_perfil else None
-            
-            # Preparar dados do endereço
-            estudio.endereco_data = {
+            # Prepara os dados para o DAO
+            estudio_data = {
+                'id_perfil': self.perfil_id,
+                'nome': nome,
+                'cnpj': cnpj,
+                'descricao': descricao,
+                'login': login,
+                'senha': senha,
+                'tipo': tipo,
+                'email': email,
+                'telefone': telefone,
+                'foto_perfil': foto_perfil if foto_perfil else None,
                 'rua': rua if rua else "Não informado",
                 'numero': int(numero) if numero.isdigit() else 0,
                 'bairro': bairro if bairro else "Não informado",
                 'cidade': cidade,
                 'complemento': complemento if complemento else "Não informado",
                 'uf': uf,
-                'cep': cep_formatado,
-                'data_cadastro': datetime.now(),
-                'data_atualizacao': datetime.now()
+                'cep': cep
             }
 
-            # Tentar cadastrar no banco de dados
-            id_estudio = self.estudio_dao.criar(estudio)
-            
-            # Mensagem de sucesso com informações importantes
-            mensagem_sucesso = f"""
-            Estúdio cadastrado com sucesso!
-            
-            ID: {id_estudio}
-            Nome: {nome}
-            Login: {login}
-            
-            Anote estas informações para acesso futuro.
-            """
-            messagebox.showinfo("Sucesso", mensagem_sucesso)
-            
-            # Limpar campos após cadastro
+            # Cadastra no banco de dados
+            id_estudio = self.estudio_dao.criar_estudio(estudio_data)
+            messagebox.showinfo("Sucesso", f"Estúdio cadastrado com ID: {id_estudio}")
             self.limpar_campos()
 
         except ValueError as ve:
-            messagebox.showerror("Erro", f"Valor inválido em algum campo: {str(ve)}")
+            messagebox.showerror("Erro de Validação", str(ve))
         except Exception as e:
-            messagebox.showerror("Erro", f"Falha ao cadastrar estúdio:\n{str(e)}")
+            messagebox.showerror("Erro", f"Falha ao cadastrar: {str(e)}")
 
     def limpar_campos(self):
-        # Limpar campos de entrada
+        """Limpa todos os campos do formulário"""
         campos = [
-            self.entry_nome, self.entry_cnpj, self.entry_email, 
+            self.entry_nome, self.entry_cnpj, self.entry_email,
             self.entry_telefone, self.entry_cep, self.entry_rua,
             self.entry_numero, self.entry_bairro, self.entry_complemento,
             self.entry_login, self.entry_senha, self.entry_confirmar_senha,
@@ -259,10 +234,7 @@ class AppEstudio:
         for campo in campos:
             campo.delete(0, tk.END)
         
-        # Limpar área de texto
         self.text_descricao.delete("1.0", tk.END)
-        
-        # Limpar comboboxes
         self.combo_uf.set('')
         self.combo_cidade.set('')
         self.combo_tipo.set('')

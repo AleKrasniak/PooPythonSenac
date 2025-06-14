@@ -2,16 +2,37 @@ import tkinter as tk
 from tkinter import messagebox
 import mysql.connector
 import requests
+from mysql.connector import Error
+import time 
+class DatabaseConnectionError(Exception):
+    """Exceção para erros de conexão com o banco"""
+    pass
 
 class EnderecoDAO:
     def __init__(self):
-        self.conexao = mysql.connector.connect(
+        self.connection = mysql.connector.connect(
             host="localhost",
             user="root",
             password="",
             database="busquestudios2"
         )
-        self.cursor = self.conexao.cursor()
+        self.cursor = self.connection.cursor(dictionary=True)
+        self._verificar_conexao()  # <-- Verifica logo ao iniciar
+
+    # --- FUNÇÃO ANTI-DESCONEXÃO ---
+    def _verificar_conexao(self):
+        """Versão turbo com mais tentativas e logs"""
+        for tentativa in range(3):  # Tenta 3 vezes
+            try:
+                if not self.connection.is_connected():
+                    print(f"⚠️ Tentando reconectar ({tentativa+1}/3)...")
+                    self.connection.reconnect(attempts=3, delay=1)
+                    self.cursor = self.connection.cursor(dictionary=True)
+                return  # Conexão OK!
+            except Error as err:
+                if tentativa == 2:  # Última tentativa
+                    raise DatabaseConnectionError(f"Falha após 3 tentativas: {err}")
+                time.sleep(1)
 
     def criar(self, endereco):
         sql = """INSERT INTO endereco 
