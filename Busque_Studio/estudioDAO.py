@@ -11,6 +11,7 @@ class EstudioDAO:
             password="",
             database="busquestudios2"
         )
+        # CORRETO:
         self.cursor = self.conexao.cursor()
 
         def criar(self, estudio):

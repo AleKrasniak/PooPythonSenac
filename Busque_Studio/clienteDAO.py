@@ -33,6 +33,12 @@ class ClienteDAO:
         self.cursor.execute(sql, (id_cliente,))
         self.conexao.commit()
 
+    def buscar_por_id(self, id_cliente):
+        """Método para buscar cliente por ID"""
+        sql = "SELECT * FROM cliente WHERE id_cliente = %s"
+        self.cursor.execute(sql, (id_cliente,))
+        return self.cursor.fetchone()
+
     def buscar_cliente_com_endereco(self, id_cliente):
         """Método para buscar cliente com dados do endereço (incluindo UF)"""
         sql = """
@@ -59,6 +65,36 @@ class ClienteDAO:
         sql = "SELECT * FROM cliente WHERE login = %s AND senha = %s"
         self.cursor.execute(sql, (login, senha))
         return self.cursor.fetchone()
+
+    def buscar_por_login_com_endereco(self, login, senha):
+        """Método para buscar cliente por login e senha com dados do endereço"""
+        sql = """
+        SELECT c.*, e.uf, e.cidade, e.bairro, e.rua, e.numero, e.cep 
+        FROM cliente c 
+        LEFT JOIN endereco e ON c.id_endereco = e.id_endereco 
+        WHERE c.login = %s AND c.senha = %s
+        """
+        self.cursor.execute(sql, (login, senha))
+        return self.cursor.fetchone()
+
+    def buscar_por_cpf(self, cpf):
+        """Método para buscar cliente por CPF (útil para validar duplicatas)"""
+        sql = "SELECT * FROM cliente WHERE cpf = %s"
+        self.cursor.execute(sql, (cpf,))
+        return self.cursor.fetchone()
+
+    def buscar_por_email(self, email):
+        """Método para buscar cliente por email (útil para validar duplicatas)"""
+        sql = "SELECT * FROM cliente WHERE email = %s"
+        self.cursor.execute(sql, (email,))
+        return self.cursor.fetchone()
+
+    def buscar_por_login_disponivel(self, login):
+        """Método para verificar se um login está disponível"""
+        sql = "SELECT COUNT(*) FROM cliente WHERE login = %s"
+        self.cursor.execute(sql, (login,))
+        resultado = self.cursor.fetchone()
+        return resultado[0] == 0  # Retorna True se login está disponível
 
     def fechar_conexao(self):
         """Método para fechar a conexão"""

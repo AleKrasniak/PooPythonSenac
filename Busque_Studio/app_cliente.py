@@ -3,6 +3,8 @@ from tkinter import ttk, messagebox
 import requests
 from cliente import Cliente
 from clienteDAO import ClienteDAO
+from endereco import Endereco
+from enderecoDAO import EnderecoDAO
 # from clienteapp_dentro import ClienteAppDentro  # <- importa a próxima tela
 
 class AppCliente:
@@ -13,6 +15,7 @@ class AppCliente:
         self.root.configure(bg='#f0f0f0')
 
         self.dao = ClienteDAO()
+        self.endereco_dao = EnderecoDAO()  # Adicionar DAO do endereço
         self.perfil_id = 1  # Perfil fixo: Cliente
         self.perfil_nome = "Cliente"
 
@@ -142,25 +145,37 @@ class AppCliente:
         senha = self.entry_senha.get().strip() or None
         genero = self.combo_genero.get().strip() or None
 
-        cliente = Cliente(
-            id_perfil=self.perfil_id,
-            id_endereco=None,
-            nome=nome,
-            dt_nasc=dt_nasc,
-            genero=genero,
-            telefone=telefone,
-            cpf=cpf,
-            email=email,
-            login=login,
-            senha=senha,
-            uf=uf,
-            cidade=cidade
-        )
-
         try:
+            # 1. PRIMEIRO: Criar o endereço
+            endereco = Endereco(
+                uf=uf,
+                cidade=cidade,
+                bairro="",  # Você pode adicionar campos para estes se necessário
+                rua="",
+                numero=0,   # numero é int, não string
+                cep="",
+                complemento=""
+            )
+            id_endereco = self.endereco_dao.criar(endereco)
+            
+            # 2. SEGUNDO: Criar o cliente com o id_endereco
+            cliente = Cliente(
+                id_perfil=self.perfil_id,
+                id_endereco=id_endereco,  # Agora com o ID válido do endereço
+                nome=nome,
+                dt_nasc=dt_nasc,
+                genero=genero,
+                telefone=telefone,
+                cpf=cpf,
+                email=email,
+                login=login,
+                senha=senha,
+            )
+
             self.dao.criar(cliente)
             messagebox.showinfo("Sucesso", "Cadastro realizado com sucesso!")
             self.limpar_campos()
+            
         except Exception as e:
             messagebox.showerror("Erro", f"Falha ao cadastrar cliente: {e}")
 
