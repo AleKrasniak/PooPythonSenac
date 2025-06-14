@@ -9,7 +9,8 @@ class AppEstudio:
     def __init__(self, root):
         self.root = root
         self.root.title("Cadastro de Estúdio - BusqueStudios")
-        self.root.geometry("750x750")
+        self.root.state('zoomed')  # Abre em tela cheia no Windows
+        # Para sistemas Unix/Linux, use: self.root.attributes('-zoomed', True)
         self.root.configure(bg='#f0f0f0')
 
         self.estudio_dao = EstudioDAO()
@@ -50,30 +51,59 @@ class AppEstudio:
 
     def criar_interface(self):
         """Cria a interface gráfica do aplicativo"""
-        # Frame principal com scrollbar
-        main_frame = tk.Frame(self.root, bg='#f0f0f0')
-        main_frame.pack(fill='both', expand=True)
+        # Container principal
+        main_container = tk.Frame(self.root, bg='#f0f0f0')
+        main_container.pack(fill='both', expand=True)
 
-        canvas = tk.Canvas(main_frame, bg='#f0f0f0')
-        scrollbar = ttk.Scrollbar(main_frame, orient="vertical", command=canvas.yview)
+        # Canvas e scrollbar para todo o conteúdo
+        canvas = tk.Canvas(main_container, bg='#f0f0f0')
+        scrollbar = ttk.Scrollbar(main_container, orient="vertical", command=canvas.yview)
         scrollable_frame = tk.Frame(canvas, bg='#f0f0f0')
 
-        scrollable_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
-        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        scrollable_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+        )
+
+        canvas.create_window((0, 0), window=scrollable_frame, anchor="n")
         canvas.configure(yscrollcommand=scrollbar.set)
 
+        # Pack canvas e scrollbar
         canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
 
-        # Título
-        tk.Label(scrollable_frame, text="CADASTRO DE ESTÚDIO", font=('Arial', 16, 'bold'), 
-                bg='#f0f0f0', fg='#333').pack(pady=10)
+        # Container principal que ocupa toda a largura
+        content_container = tk.Frame(scrollable_frame, bg='#f0f0f0')
+        content_container.pack(fill='both', expand=True)
 
-        # Campos do formulário
-        frame_campos = tk.Frame(scrollable_frame, bg='#f0f0f0')
-        frame_campos.pack(pady=10, padx=20, fill='x')
+        # Título centralizado
+        title_frame = tk.Frame(content_container, bg='#f0f0f0')
+        title_frame.pack(pady=(20, 30), fill='x')
+        tk.Label(title_frame, text="CADASTRO DE ESTÚDIO", font=('Arial', 16, 'bold'), 
+                bg='#f0f0f0', fg='#333').pack()
 
-        campos = [
+        # Frame principal centralizado para os campos
+        center_frame = tk.Frame(content_container, bg='#f0f0f0')
+        center_frame.pack(expand=True)
+
+        # Frame principal para os campos organizados em colunas
+        frame_principal = tk.Frame(center_frame, bg='#f0f0f0')
+        frame_principal.pack()
+
+        # Configurar colunas com peso igual
+        frame_principal.columnconfigure(0, weight=1)
+        frame_principal.columnconfigure(1, weight=1)
+
+        # Frame para coluna esquerda
+        frame_esquerda = tk.Frame(frame_principal, bg='#f0f0f0')
+        frame_esquerda.grid(row=0, column=0, padx=(0, 40), sticky='n')
+
+        # Frame para coluna direita  
+        frame_direita = tk.Frame(frame_principal, bg='#f0f0f0')
+        frame_direita.grid(row=0, column=1, padx=(40, 0), sticky='n')
+
+        # Campos da coluna esquerda
+        campos_esquerda = [
             ("Nome do Estúdio *:", "entry_nome"),
             ("CNPJ * (14 dígitos):", "entry_cnpj"),
             ("Email *:", "entry_email"),
@@ -81,63 +111,101 @@ class AppEstudio:
             ("Descrição:", "text_descricao"),
             ("CEP * (12345-678):", "entry_cep"),
             ("Rua:", "entry_rua"),
-            ("Número:", "entry_numero"),
+            ("Número:", "entry_numero")
+        ]
+
+        # Campos da coluna direita
+        campos_direita = [
             ("Bairro:", "entry_bairro"),
             ("Complemento:", "entry_complemento"),
             ("Login *:", "entry_login"),
             ("Senha *:", "entry_senha", True),
             ("Confirme a Senha *:", "entry_confirmar_senha", True),
-            ("URL da Foto:", "entry_foto_perfil")
+            ("URL da Foto:", "entry_foto_perfil"),
+            ("UF *:", "combo_uf"),
+            ("Cidade *:", "combo_cidade"),
+            ("Tipo *:", "combo_tipo")
         ]
 
-        row = 0
-        for label, attr, *senha in campos:
-            tk.Label(frame_campos, text=label, bg='#f0f0f0').grid(row=row, column=0, sticky='w', pady=3)
-            
-            if attr == "text_descricao":
-                text = tk.Text(frame_campos, width=40, height=4)
-                text.grid(row=row, column=1, pady=3, padx=5)
-                setattr(self, attr, text)
-            else:
-                entry = tk.Entry(frame_campos, width=40, show='*' if senha else '')
-                entry.grid(row=row, column=1, pady=3, padx=5)
-                setattr(self, attr, entry)
-            
-            row += 1
+        # Criar campos da coluna esquerda
+        self.criar_campos(frame_esquerda, campos_esquerda)
+        
+        # Criar campos da coluna direita
+        self.criar_campos(frame_direita, campos_direita)
 
-        # Combobox para UF
-        tk.Label(frame_campos, text="UF *:", bg='#f0f0f0').grid(row=row, column=0, sticky='w', pady=3)
-        self.combo_uf = ttk.Combobox(frame_campos, values=[e['sigla'] for e in self.estados], 
-                                    width=10, state='readonly')
-        self.combo_uf.grid(row=row, column=1, sticky='w', pady=3, padx=5)
-        self.combo_uf.bind("<<ComboboxSelected>>", self.on_uf_selecionado)
-        row += 1
+        # Frame para botões centralizados
+        frame_botoes = tk.Frame(center_frame, bg='#f0f0f0')
+        frame_botoes.pack(pady=40)
 
-        # Combobox para Cidade
-        tk.Label(frame_campos, text="Cidade *:", bg='#f0f0f0').grid(row=row, column=0, sticky='w', pady=3)
-        self.combo_cidade = ttk.Combobox(frame_campos, values=[], width=37, state='readonly')
-        self.combo_cidade.grid(row=row, column=1, sticky='w', pady=3, padx=5)
-        row += 1
-
-        # Combobox para Tipo
-        tk.Label(frame_campos, text="Tipo *:", bg='#f0f0f0').grid(row=row, column=0, sticky='w', pady=3)
-        self.combo_tipo = ttk.Combobox(frame_campos, 
-                                     values=['Tatuagem', 'Fotografia', 'Música', 'Arte', 'Design', 'Áudio', 'Vídeo'], 
-                                     width=37, state='readonly')
-        self.combo_tipo.grid(row=row, column=1, sticky='w', pady=3, padx=5)
-        row += 1
-
-        # Botões
-        frame_botoes = tk.Frame(scrollable_frame, bg='#f0f0f0')
-        frame_botoes.pack(pady=20)
-
+        # Botão de Cadastro
         tk.Button(frame_botoes, text="CADASTRAR", command=self.cadastrar_estudio,
                  bg='#e74c3c', fg='white', font=('Arial', 12, 'bold'), 
-                 width=25, height=2).grid(row=0, column=0, padx=5)
+                 width=25, height=2).pack(pady=5)
 
+        # Botão Limpar
         tk.Button(frame_botoes, text="LIMPAR", command=self.limpar_campos,
                  bg='#607D8B', fg='white', font=('Arial', 10, 'bold'),
-                 width=15, height=2).grid(row=1, column=0, pady=10)
+                 width=15, height=2).pack(pady=5)
+
+        # Bind scroll do mouse
+        def _on_mousewheel(event):
+            canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+        
+        # Bind para canvas e scrollable_frame
+        canvas.bind_all("<MouseWheel>", _on_mousewheel)
+
+        # Centralizar o canvas horizontalmente
+        def centralizar_canvas(event=None):
+            canvas.update_idletasks()
+            canvas_width = canvas.winfo_width()
+            content_width = scrollable_frame.winfo_reqwidth()
+            if content_width < canvas_width:
+                x = (canvas_width - content_width) // 2
+                canvas.create_window((x, 0), window=scrollable_frame, anchor="n")
+            else:
+                canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        
+        canvas.bind('<Configure>', centralizar_canvas)
+        self.root.after(100, centralizar_canvas)
+
+    def criar_campos(self, parent_frame, campos):
+        """Cria os campos de entrada em um frame específico"""
+        row = 0
+        for campo_info in campos:
+            label_text = campo_info[0]
+            attr_name = campo_info[1]
+            is_password = len(campo_info) > 2 and campo_info[2]
+            
+            # Frame para cada linha
+            linha_frame = tk.Frame(parent_frame, bg='#f0f0f0')
+            linha_frame.grid(row=row, column=0, sticky='ew', pady=3)
+            linha_frame.columnconfigure(1, weight=1)
+            
+            # Label com largura fixa
+            tk.Label(linha_frame, text=label_text, bg='#f0f0f0', 
+                    font=('Arial', 10), width=20, anchor='w').grid(
+                    row=0, column=0, sticky='w', padx=(0, 10))
+            
+            # Widget de entrada
+            if attr_name == "text_descricao":
+                widget = tk.Text(linha_frame, width=30, height=4, font=('Arial', 10))
+            elif attr_name == "combo_uf":
+                widget = ttk.Combobox(linha_frame, values=[e['sigla'] for e in self.estados], 
+                                    width=27, state='readonly')
+                widget.bind("<<ComboboxSelected>>", self.on_uf_selecionado)
+            elif attr_name == "combo_cidade":
+                widget = ttk.Combobox(linha_frame, values=[], width=27, state='readonly')
+            elif attr_name == "combo_tipo":
+                widget = ttk.Combobox(linha_frame, 
+                                    values=['Tatuagem', 'Fotografia', 'Música', 'Arte', 'Design', 'Áudio', 'Vídeo'], 
+                                    width=27, state='readonly')
+            else:
+                widget = tk.Entry(linha_frame, width=30, show='*' if is_password else '', 
+                                font=('Arial', 10))
+            
+            widget.grid(row=0, column=1, sticky='w')
+            setattr(self, attr_name, widget)
+            row += 1
 
     def validar_cep(self, cep: str) -> Optional[str]:
         """Valida e formata o CEP"""

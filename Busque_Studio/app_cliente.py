@@ -11,7 +11,8 @@ class AppCliente:
     def __init__(self, root):
         self.root = root
         self.root.title("Cadastro de Cliente - BusqueStudios")
-        self.root.geometry("600x600")
+        self.root.state('zoomed')  # Abre em tela cheia no Windows
+        # Para sistemas Unix/Linux, use: self.root.attributes('-zoomed', True)
         self.root.configure(bg='#f0f0f0')
 
         self.dao = ClienteDAO()
@@ -35,12 +36,45 @@ class AppCliente:
             return []
 
     def criar_interface(self):
-        titulo = tk.Label(self.root, text="CADASTRO DE CLIENTE",
-                         font=('Arial', 16, 'bold'), bg='#f0f0f0', fg='#333')
-        titulo.pack(pady=10)
+        # Container principal centralizado
+        main_container = tk.Frame(self.root, bg='#f0f0f0')
+        main_container.pack(expand=True, fill='both')
 
-        frame = tk.Frame(self.root, bg='#f0f0f0')
-        frame.pack(padx=20, pady=10, fill='x')
+        # Canvas para permitir scroll
+        canvas = tk.Canvas(main_container, bg='#f0f0f0', highlightthickness=0)
+        
+        # Scrollbar vertical
+        scrollbar = ttk.Scrollbar(main_container, orient="vertical", command=canvas.yview)
+        
+        # Frame scrollable que conterá todo o conteúdo
+        scrollable_frame = tk.Frame(canvas, bg='#f0f0f0')
+        
+        # Configurar scroll
+        scrollable_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+        )
+        
+        # Criar janela no canvas
+        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+        
+        # Posicionar canvas e scrollbar
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+
+        # Frame principal que será centralizado dentro do scrollable_frame
+        content_frame = tk.Frame(scrollable_frame, bg='#f0f0f0')
+        content_frame.pack(expand=True, pady=50)  # Padding para centralização vertical
+
+        # Título centralizado
+        titulo = tk.Label(content_frame, text="CADASTRO DE CLIENTE",
+                         font=('Arial', 16, 'bold'), bg='#f0f0f0', fg='#333')
+        titulo.pack(pady=(0, 20))
+
+        # Frame para os campos de entrada
+        frame = tk.Frame(content_frame, bg='#f0f0f0')
+        frame.pack(pady=10)
 
         # Campos de entrada
         campos = [
@@ -60,54 +94,73 @@ class AppCliente:
 
         row = 0
         for label, attr, *senha in campos:
-            tk.Label(frame, text=label, bg='#f0f0f0').grid(row=row, column=0, sticky='w', pady=3)
-            entry = tk.Entry(frame, width=40, show='*' if senha else '')
-            entry.grid(row=row, column=1, pady=3, padx=5)
+            tk.Label(frame, text=label, bg='#f0f0f0', font=('Arial', 10)).grid(
+                row=row, column=0, sticky='w', pady=3, padx=(0, 10))
+            entry = tk.Entry(frame, width=30, show='*' if senha else '', font=('Arial', 10))
+            entry.grid(row=row, column=1, pady=3)
             setattr(self, attr, entry)
             row += 1
 
         # Combobox para UF
-        tk.Label(frame, text="UF *:", bg='#f0f0f0').grid(row=row, column=0, sticky='w', pady=3)
+        tk.Label(frame, text="UF *:", bg='#f0f0f0', font=('Arial', 10)).grid(
+            row=row, column=0, sticky='w', pady=3, padx=(0, 10))
         lista_uf = [uf['sigla'] for uf in self.estados]
         self.combo_uf = ttk.Combobox(frame, values=lista_uf, width=10, state='readonly')
-        self.combo_uf.grid(row=row, column=1, sticky='w', pady=3, padx=5)
+        self.combo_uf.grid(row=row, column=1, sticky='w', pady=3)
         self.combo_uf.bind("<<ComboboxSelected>>", self.on_uf_selecionado)
         row += 1
 
         # Combobox para Cidade
-        tk.Label(frame, text="Cidade *:", bg='#f0f0f0').grid(row=row, column=0, sticky='w', pady=3)
-        self.combo_cidade = ttk.Combobox(frame, values=[], width=37, state='readonly')
-        self.combo_cidade.grid(row=row, column=1, sticky='w', pady=3, padx=5)
+        tk.Label(frame, text="Cidade *:", bg='#f0f0f0', font=('Arial', 10)).grid(
+            row=row, column=0, sticky='w', pady=3, padx=(0, 10))
+        self.combo_cidade = ttk.Combobox(frame, values=[], width=27, state='readonly')
+        self.combo_cidade.grid(row=row, column=1, sticky='w', pady=3)
         row += 1
 
         # Combobox para Gênero
-        tk.Label(frame, text="Gênero:", bg='#f0f0f0').grid(row=row, column=0, sticky='w', pady=3)
-        self.combo_genero = ttk.Combobox(frame, values=['Masculino', 'Feminino', 'Outro'], width=37, state='readonly')
-        self.combo_genero.grid(row=row, column=1, sticky='w', pady=3, padx=5)
+        tk.Label(frame, text="Gênero:", bg='#f0f0f0', font=('Arial', 10)).grid(
+            row=row, column=0, sticky='w', pady=3, padx=(0, 10))
+        self.combo_genero = ttk.Combobox(frame, values=['Masculino', 'Feminino', 'Outro'], 
+                                        width=27, state='readonly')
+        self.combo_genero.grid(row=row, column=1, sticky='w', pady=3)
         row += 1
 
-        # Frame para botões
-        frame_botoes = tk.Frame(self.root, bg='#f0f0f0')
-        frame_botoes.pack(pady=20)
+        # Frame para botões centralizados
+        frame_botoes = tk.Frame(content_frame, bg='#f0f0f0')
+        frame_botoes.pack(pady=30)
 
         # Botão de Cadastro
         btn_cadastrar = tk.Button(frame_botoes, text="CADASTRAR-SE COMO CLIENTE",
                                  command=self.criar, bg='#4CAF50', fg='white',
                                  font=('Arial', 12, 'bold'), width=25, height=2)
-        btn_cadastrar.grid(row=0, column=0, padx=5)
+        btn_cadastrar.pack(pady=5)
 
         # Botão Limpar
         btn_limpar = tk.Button(frame_botoes, text="LIMPAR CAMPOS", command=self.limpar_campos,
                               bg='#607D8B', fg='white', font=('Arial', 10, 'bold'),
                               width=15, height=2)
-        btn_limpar.grid(row=1, column=0, pady=10)
+        btn_limpar.pack(pady=5)
 
-        # Botão Continuar
-        btn_continuar = tk.Button(frame_botoes, text="CONTINUAR",
-                                 command=self.continuar_para_dentro,
-                                 bg='#2980b9', fg='white',
-                                 font=('Arial', 12, 'bold'), width=25, height=2)
-        btn_continuar.grid(row=2, column=0, pady=10)
+        # Bind do scroll do mouse
+        def _on_mousewheel(event):
+            canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+        
+        # Bind para Windows
+        canvas.bind("<MouseWheel>", _on_mousewheel)
+        
+        # Bind para Linux
+        canvas.bind("<Button-4>", lambda e: canvas.yview_scroll(-1, "units"))
+        canvas.bind("<Button-5>", lambda e: canvas.yview_scroll(1, "units"))
+        
+        # Centralizar horizontalmente o conteúdo
+        def centralizar_conteudo(event=None):
+            canvas_width = canvas.winfo_width()
+            frame_width = content_frame.winfo_reqwidth()
+            x_pos = max(0, (canvas_width - frame_width) // 2)
+            canvas.coords(canvas.find_all()[0], x_pos, 0)
+        
+        canvas.bind('<Configure>', centralizar_conteudo)
+        scrollable_frame.bind('<Configure>', centralizar_conteudo)
 
     def on_uf_selecionado(self, event):
         uf = self.combo_uf.get()
@@ -221,26 +274,6 @@ class AppCliente:
         self.combo_uf.set('')
         self.combo_cidade.set('')
         self.combo_genero.set('')
-
-    def continuar_para_dentro(self):
-        # Verificar campos obrigatórios
-        campos_obrigatorios = [
-            (self.entry_nome.get().strip(), "Nome"),
-            (self.entry_email.get().strip(), "Email"),
-            (self.entry_cpf.get().strip(), "CPF"),
-            (self.entry_telefone.get().strip(), "Telefone"),
-            (self.combo_uf.get().strip(), "UF"),
-            (self.combo_cidade.get().strip(), "Cidade")
-        ]
-
-        faltando = [nome for valor, nome in campos_obrigatorios if not valor]
-        
-        if faltando:
-            messagebox.showwarning("Atenção", f"Preencha os campos obrigatórios: {', '.join(faltando)}")
-            return
-        
-        # Aqui você pode adicionar a lógica para continuar
-        messagebox.showinfo("Continuar", "Todos os campos obrigatórios estão preenchidos!")
 
 if __name__ == "__main__":
     root = tk.Tk()

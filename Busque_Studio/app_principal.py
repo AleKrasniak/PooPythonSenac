@@ -5,14 +5,25 @@ from clienteDAO import ClienteDAO
 from estudioDAO import EstudioDAO
 import sys
 from pathlib import Path
-sys.path.append(str(Path(__file__).parent))  # Garante que o Python procure no diretório atual
+sys.path.append(str(Path(__file__).parent))
 
 class AppPrincipal:
     def __init__(self):
         self.root = tk.Tk()
         self.root.title("BusqueStudios - Sistema Principal")
-        self.root.geometry("450x600")
+        
+        # Configuração de tamanho fixo mais adequado
+        self.root.geometry("800x1000")
+        self.root.state('zoomed')  # Windows
+        
+        # Centraliza a janela
+        self.centralizar_janela()
+        
+        # Configuração de cor de fundo
         self.root.configure(bg='#2c3e50')
+        
+        # Tamanho mínimo
+        self.root.minsize(700, 600)  # Reduzido para melhor compatibilidade
         
         self.dao = ClienteDAO()
         self.estudio_dao = EstudioDAO()
@@ -20,95 +31,258 @@ class AppPrincipal:
         
         self.criar_interface()
         
-    def criar_interface(self):
-        """Cria toda a interface gráfica principal"""
-        # Cabeçalho
-        tk.Label(self.root, text="BUSQUE STUDIOS", 
-                font=('Arial', 24, 'bold'), 
-                bg='#2c3e50', fg='white').pack(pady=30)
+    def centralizar_janela(self):
+        """Centraliza a janela na tela"""
+        self.root.update_idletasks()
+        width = 800
+        height = 1000
+        x = (self.root.winfo_screenwidth() // 2) - (width // 2)
+        y = (self.root.winfo_screenheight() // 2) - (height // 2)
+        self.root.geometry(f'{width}x{height}+{x}+{y}')
+    
+    def criar_interface_scroll(self):
+        """Cria interface com scroll para telas pequenas"""
+        # Limpa widgets existentes
+        for widget in self.root.winfo_children():
+            widget.destroy()
         
-        tk.Label(self.root, text="Sistema de Gestão", 
-                font=('Arial', 12), 
-                bg='#2c3e50', fg='#bdc3c7').pack(pady=(0, 30))
+        # Container principal com scroll
+        main_frame = tk.Frame(self.root, bg='#2c3e50')
+        main_frame.pack(fill='both', expand=True)
+        
+        # Canvas para scroll
+        canvas = tk.Canvas(main_frame, bg='#2c3e50', highlightthickness=0)
+        scrollbar = ttk.Scrollbar(main_frame, orient="vertical", command=canvas.yview)
+        scrollable_frame = tk.Frame(canvas, bg='#2c3e50')
+        
+        # Configuração do scroll
+        def atualizar_scroll(event):
+            canvas.configure(scrollregion=canvas.bbox("all"))
+        
+        scrollable_frame.bind("<Configure>", atualizar_scroll)
+        
+        # Cria janela no canvas e configura scroll
+        canvas_window = canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+        
+        # Centraliza horizontalmente o conteúdo
+        def centralizar_horizontal(event):
+            # Atualiza a largura do scrollable_frame para preencher o canvas
+            canvas_width = event.width
+            canvas.itemconfig(canvas_window, width=canvas_width)
+        
+        canvas.bind('<Configure>', centralizar_horizontal)
+        
+        # Pack do canvas e scrollbar
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+        
+        # Scroll com mouse wheel
+        def _on_mousewheel(event):
+            canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+        
+        canvas.bind_all("<MouseWheel>", _on_mousewheel)
+        
+        # Container centralizado para o conteúdo
+        content_container = tk.Frame(scrollable_frame, bg='#2c3e50')
+        content_container.pack(expand=True, fill='both')
+        
+        # Frame centralizado para todo o conteúdo
+        center_frame = tk.Frame(content_container, bg='#2c3e50')
+        center_frame.place(relx=0.5, rely=0.5, anchor='center')
+        
+        # Cabeçalho
+        self.criar_cabecalho(center_frame)
         
         # Seção de Login
-        self.criar_secao_login()
+        self.criar_secao_login(center_frame)
         
         # Separador
-        tk.Frame(self.root, height=2, bg='#34495e').pack(fill='x', padx=40, pady=20)
+        separator = tk.Frame(center_frame, height=2, bg='#34495e', width=500)
+        separator.pack(pady=10)
+        separator.pack_propagate(False)
         
         # Seção de Cadastro
-        self.criar_secao_cadastro()
+        self.criar_secao_cadastro(center_frame)
         
-    def criar_secao_login(self):
+        # Espaço extra no final
+        tk.Frame(center_frame, height=50, bg='#2c3e50').pack()
+        
+        # Garante altura mínima para centralização
+        content_container.configure(height=800)
+        
+        return canvas, scrollable_frame
+    
+    def criar_interface(self):
+        """Cria toda a interface gráfica principal"""
+        # Verifica se a tela é pequena
+        screen_height = self.root.winfo_screenheight()
+        
+        if screen_height < 800:  # Se a tela for menor que 800px
+            self.criar_interface_scroll()
+        else:
+            self.criar_interface_normal()
+    
+    def criar_interface_normal(self):
+        """Cria interface normal sem scroll"""
+        # Limpa widgets existentes
+        for widget in self.root.winfo_children():
+            widget.destroy()
+        
+        # Container principal centralizado
+        main_container = tk.Frame(self.root, bg='#2c3e50')
+        main_container.pack(fill='both', expand=True)
+        
+        # Frame centralizado para todo o conteúdo
+        center_frame = tk.Frame(main_container, bg='#2c3e50')
+        center_frame.place(relx=0.5, rely=0.5, anchor='center')
+        
+        # Cabeçalho
+        self.criar_cabecalho(center_frame)
+        
+        # Seção de Login
+        self.criar_secao_login(center_frame)
+        
+        # Separador
+        separator = tk.Frame(center_frame, height=2, bg='#34495e', width=500)
+        separator.pack(pady=10)
+        separator.pack_propagate(False)
+        
+        # Seção de Cadastro
+        self.criar_secao_cadastro(center_frame)
+    
+    def criar_cabecalho(self, parent):
+        """Cria o cabeçalho da aplicação"""
+        header_frame = tk.Frame(parent, bg='#2c3e50')
+        header_frame.pack(pady=(0, 15))
+        
+        title_label = tk.Label(header_frame, text="BUSQUE STUDIOS", 
+                font=('Arial', 26, 'bold'), 
+                bg='#2c3e50', fg='white')
+        title_label.pack()
+        
+        subtitle_label = tk.Label(header_frame, text="Sistema de Gestão", 
+                font=('Arial', 12), 
+                bg='#2c3e50', fg='#bdc3c7')
+        subtitle_label.pack(pady=(3, 0))
+        
+    def criar_secao_login(self, parent):
         """Cria a seção de login com campos e botão"""
-        frame_login = tk.Frame(self.root, bg='#34495e', relief='ridge', bd=2)
-        frame_login.pack(pady=10, padx=40, fill='x')
+        # Frame de login
+        frame_login = tk.Frame(parent, bg='#34495e', relief='ridge', bd=2)
+        frame_login.pack(pady=10)
         
-        tk.Label(frame_login, text="FAZER LOGIN", 
-                font=('Arial', 14, 'bold'), 
-                bg='#34495e', fg='white').pack(pady=(10, 15))
+        # Título do login
+        login_title = tk.Label(frame_login, text="FAZER LOGIN", 
+                font=('Arial', 15, 'bold'), 
+                bg='#34495e', fg='white')
+        login_title.pack(pady=12)
         
+        # Frame para campos
         frame_campos = tk.Frame(frame_login, bg='#34495e')
-        frame_campos.pack(pady=10, padx=20)
+        frame_campos.pack(pady=10, padx=30)
         
         # Campo de Login
         tk.Label(frame_campos, text="Login:", 
-                font=('Arial', 10), bg='#34495e', fg='white').grid(row=0, column=0, sticky='w', pady=5)
-        self.entry_login = tk.Entry(frame_campos, width=25, font=('Arial', 10))
-        self.entry_login.grid(row=0, column=1, pady=5, padx=(10, 0))
+                font=('Arial', 11, 'bold'), bg='#34495e', fg='white').pack(anchor='w', pady=(0, 3))
+        self.entry_login = tk.Entry(frame_campos, font=('Arial', 11), relief='flat', bd=5, width=35)
+        self.entry_login.pack(pady=(0, 10))
         
         # Campo de Senha
         tk.Label(frame_campos, text="Senha:", 
-                font=('Arial', 10), bg='#34495e', fg='white').grid(row=1, column=0, sticky='w', pady=5)
-        self.entry_senha = tk.Entry(frame_campos, width=25, font=('Arial', 10), show='*')
-        self.entry_senha.grid(row=1, column=1, pady=5, padx=(10, 0))
+                font=('Arial', 11, 'bold'), bg='#34495e', fg='white').pack(anchor='w', pady=(0, 3))
+        self.entry_senha = tk.Entry(frame_campos, font=('Arial', 11), show='*', relief='flat', bd=5, width=35)
+        self.entry_senha.pack(pady=(0, 12))
         
         # Botão de Login
-        tk.Button(frame_login, text="ENTRAR", 
+        btn_login = tk.Button(frame_campos, text="ENTRAR", 
                  command=self.fazer_login,
                  bg='#27ae60', fg='white',
                  font=('Arial', 12, 'bold'),
-                 width=15, height=2,
-                 cursor='hand2').pack(pady=15)
+                 height=2, width=15,
+                 cursor='hand2',
+                 relief='flat',
+                 bd=0,
+                 activebackground='#229954',
+                 activeforeground='white')
+        btn_login.pack(pady=(0, 15))
         
+        # Efeito de hover
+        self.add_hover_effect(btn_login, '#27ae60', '#229954')
+        
+        # Bind Enter para login
         self.entry_senha.bind('<Return>', lambda event: self.fazer_login())
         
-    def criar_secao_cadastro(self):
+    def criar_secao_cadastro(self, parent):
         """Cria a seção de cadastro com botões"""
-        tk.Label(self.root, text="OU CADASTRE-SE", 
-                font=('Arial', 14, 'bold'), 
-                bg='#2c3e50', fg='#bdc3c7').pack(pady=(10, 20))
+        # Frame de cadastro
+        cadastro_frame = tk.Frame(parent, bg='#2c3e50')
+        cadastro_frame.pack(pady=10)
         
-        frame_botoes = tk.Frame(self.root, bg='#2c3e50')
-        frame_botoes.pack(expand=True)
+        # Título
+        tk.Label(cadastro_frame, text="OU CADASTRE-SE", 
+                font=('Arial', 16, 'bold'), 
+                bg='#2c3e50', fg='#bdc3c7').pack(pady=(0, 15))
+        
+        # Frame para botões de cadastro
+        frame_botoes_cadastro = tk.Frame(cadastro_frame, bg='#2c3e50')
+        frame_botoes_cadastro.pack(pady=5)
         
         # Botão Cadastrar Cliente
-        tk.Button(frame_botoes, 
-                 text="CADASTRAR CLIENTE",
+        btn_cliente = tk.Button(frame_botoes_cadastro, 
+                 text="CADASTRAR\nCLIENTE",
                  command=self.abrir_cadastro_cliente,
                  bg='#BA4467', fg='white',
-                 font=('Arial', 14, 'bold'),
-                 width=20, height=2,
-                 cursor='hand2').pack(pady=10)
+                 font=('Arial', 11, 'bold'),
+                 height=3, width=16,
+                 cursor='hand2',
+                 relief='flat',
+                 bd=0,
+                 activebackground='#A53A5A',
+                 activeforeground='white')
+        btn_cliente.pack(side='left', padx=10)
+        self.add_hover_effect(btn_cliente, '#BA4467', '#A53A5A')
         
         # Botão Cadastrar Estúdio
-        tk.Button(frame_botoes, 
-                 text="CADASTRAR ESTÚDIO",
+        btn_estudio = tk.Button(frame_botoes_cadastro, 
+                 text="CADASTRAR\nESTÚDIO",
                  command=self.abrir_cadastro_estudio,
                  bg='#e74c3c', fg='white',
-                 font=('Arial', 14, 'bold'),
-                 width=20, height=2,
-                 cursor='hand2').pack(pady=10)
+                 font=('Arial', 11, 'bold'),
+                 height=3, width=16,
+                 cursor='hand2',
+                 relief='flat',
+                 bd=0,
+                 activebackground='#C0392B',
+                 activeforeground='white')
+        btn_estudio.pack(side='left', padx=10)
+        self.add_hover_effect(btn_estudio, '#e74c3c', '#C0392B')
         
         # Botão Admin
-        tk.Button(frame_botoes, 
+        btn_admin = tk.Button(cadastro_frame, 
                  text="ÁREA ADMINISTRATIVA",
                  command=self.abrir_area_admin,
                  bg='#95a5a6', fg='white',
-                 font=('Arial', 10),
-                 width=20, height=1,
-                 cursor='hand2').pack(pady=(30, 10))
+                 font=('Arial', 10, 'bold'),
+                 height=2, width=22,
+                 cursor='hand2',
+                 relief='flat',
+                 bd=0,
+                 activebackground='#7F8C8D',
+                 activeforeground='white')
+        btn_admin.pack(pady=(20, 10))
+        self.add_hover_effect(btn_admin, '#95a5a6', '#7F8C8D')
+    
+    def add_hover_effect(self, button, normal_color, hover_color):
+        """Adiciona efeito de hover aos botões"""
+        def on_enter(e):
+            button.config(bg=hover_color)
+        
+        def on_leave(e):
+            button.config(bg=normal_color)
+        
+        button.bind("<Enter>", on_enter)
+        button.bind("<Leave>", on_leave)
     
     def fazer_login(self):
         """Realiza o login do usuário"""
@@ -197,37 +371,141 @@ class AppPrincipal:
         }
     
     def mostrar_area_logado(self):
-        """Mostra a área específica do usuário logado"""
+        """Mostra a área específica do usuário logado com scroll se necessário"""
         for widget in self.root.winfo_children():
             widget.destroy()
         
-        self.root.geometry("500x400")
+        # Mantém configuração da janela
+        self.root.state('zoomed')
+        
+        # Verifica se precisa de scroll
+        screen_height = self.root.winfo_screenheight()
+        
+        if screen_height < 800:
+            self.mostrar_area_logado_scroll()
+        else:
+            self.mostrar_area_logado_normal()
+    
+    def mostrar_area_logado_scroll(self):
+        """Área logado com scroll"""
+        # Container principal com scroll
+        main_frame = tk.Frame(self.root, bg='#f0f0f0')
+        main_frame.pack(fill='both', expand=True)
+        
+        # Canvas para scroll
+        canvas = tk.Canvas(main_frame, bg='#f0f0f0', highlightthickness=0)
+        scrollbar = ttk.Scrollbar(main_frame, orient="vertical", command=canvas.yview)
+        scrollable_frame = tk.Frame(canvas, bg='#f0f0f0')
+        
+        # Configuração do scroll
+        def atualizar_scroll(event):
+            canvas.configure(scrollregion=canvas.bbox("all"))
+        
+        scrollable_frame.bind("<Configure>", atualizar_scroll)
+        
+        # Cria janela no canvas
+        canvas_window = canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+        
+        # Centraliza horizontalmente o conteúdo
+        def centralizar_horizontal(event):
+            canvas_width = event.width
+            canvas.itemconfig(canvas_window, width=canvas_width)
+        
+        canvas.bind('<Configure>', centralizar_horizontal)
+        
+        # Pack do canvas e scrollbar
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+        
+        # Scroll com mouse wheel
+        def _on_mousewheel(event):
+            canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+        
+        canvas.bind_all("<MouseWheel>", _on_mousewheel)
         
         # Header
-        frame_header = tk.Frame(self.root, bg='#27ae60', height=80)
+        frame_header = tk.Frame(scrollable_frame, bg='#27ae60', height=120)
         frame_header.pack(fill='x')
         frame_header.pack_propagate(False)
         
-        tk.Label(frame_header, text=f"Bem-vindo(a), {self.usuario_logado['nome']}!", 
-                font=('Arial', 16, 'bold'), 
-                bg='#27ae60', fg='white').pack(pady=10)
+        welcome_label = tk.Label(frame_header, text=f"Bem-vindo(a), {self.usuario_logado['nome']}!", 
+                font=('Arial', 20, 'bold'), 
+                bg='#27ae60', fg='white')
+        welcome_label.pack(pady=(20, 5))
         
-        tk.Label(frame_header, text=f"Perfil: {self.usuario_logado['nome_perfil']}", 
-                font=('Arial', 12), 
-                bg='#27ae60', fg='white').pack()
+        profile_label = tk.Label(frame_header, text=f"Perfil: {self.usuario_logado['nome_perfil']}", 
+                font=('Arial', 14), 
+                bg='#27ae60', fg='white')
+        profile_label.pack(pady=(0, 20))
+        
+        # Container para centralizar o conteúdo principal
+        content_container = tk.Frame(scrollable_frame, bg='#f0f0f0')
+        content_container.pack(fill='both', expand=True)
+        
+        # Frame principal centralizado
+        frame_main = tk.Frame(content_container, bg='#f0f0f0')
+        frame_main.place(relx=0.5, rely=0.5, anchor='center')
+        
+        self.criar_opcoes_perfil(frame_main)
+        
+        # Botão de logout centralizado
+        btn_logout = tk.Button(frame_main, text="SAIR", 
+                 command=self.fazer_logout,
+                 bg='#e74c3c', fg='white',
+                 font=('Arial', 12, 'bold'),
+                 height=2, width=15,
+                 cursor='hand2',
+                 relief='flat',
+                 bd=0,
+                 activebackground='#C0392B',
+                 activeforeground='white')
+        btn_logout.pack(pady=40)
+        self.add_hover_effect(btn_logout, '#e74c3c', '#C0392B')
+        
+        # Garante altura mínima para centralização
+        content_container.configure(height=600)
+    
+    def mostrar_area_logado_normal(self):
+        """Área logado normal"""
+        # Container principal
+        main_container = tk.Frame(self.root, bg='#f0f0f0')
+        main_container.pack(fill='both', expand=True)
+        
+        # Header
+        frame_header = tk.Frame(main_container, bg='#27ae60', height=120)
+        frame_header.pack(fill='x')
+        frame_header.pack_propagate(False)
+        
+        welcome_label = tk.Label(frame_header, text=f"Bem-vindo(a), {self.usuario_logado['nome']}!", 
+                font=('Arial', 20, 'bold'), 
+                bg='#27ae60', fg='white')
+        welcome_label.pack(pady=(20, 5))
+        
+        profile_label = tk.Label(frame_header, text=f"Perfil: {self.usuario_logado['nome_perfil']}", 
+                font=('Arial', 14), 
+                bg='#27ae60', fg='white')
+        profile_label.pack(pady=(0, 20))
         
         # Área principal
-        frame_main = tk.Frame(self.root, bg='#f0f0f0')
-        frame_main.pack(fill='both', expand=True, padx=20, pady=20)
+        frame_main = tk.Frame(main_container, bg='#f0f0f0')
+        frame_main.pack(expand=True, pady=50)
         
         self.criar_opcoes_perfil(frame_main)
         
         # Botão de logout
-        tk.Button(frame_main, text="SAIR", 
+        btn_logout = tk.Button(frame_main, text="SAIR", 
                  command=self.fazer_logout,
                  bg='#e74c3c', fg='white',
-                 font=('Arial', 10, 'bold'),
-                 width=15, height=2).pack(side='bottom', pady=20)
+                 font=('Arial', 12, 'bold'),
+                 height=2, width=15,
+                 cursor='hand2',
+                 relief='flat',
+                 bd=0,
+                 activebackground='#C0392B',
+                 activeforeground='white')
+        btn_logout.pack(pady=40)
+        self.add_hover_effect(btn_logout, '#e74c3c', '#C0392B')
     
     def criar_opcoes_perfil(self, frame_parent):
         """Cria opções baseadas no tipo de usuário"""
@@ -243,57 +521,78 @@ class AppPrincipal:
     def criar_opcoes_admin(self, frame_parent):
         """Opções para administradores"""
         tk.Label(frame_parent, text="ÁREA ADMINISTRATIVA", 
-                font=('Arial', 18, 'bold'), 
-                bg='#f0f0f0', fg='#95a5a6').pack(pady=20)
+                font=('Arial', 22, 'bold'), 
+                bg='#f0f0f0', fg='#95a5a6').pack(pady=30)
         
-        botoes = [
-            ("Gerenciar Usuários", self.gerenciar_usuarios, '#95a5a6'),
-            ("Aprovar Estúdios", self.aprovar_estudios, '#34495e'),
-            ("Relatórios", self.gerar_relatorios, '#7f8c8d')
+        botoes_info = [
+            ("Gerenciar Usuários", self.gerenciar_usuarios, '#95a5a6', '#7F8C8D'),
+            ("Aprovar Estúdios", self.aprovar_estudios, '#34495e', '#2C3E50'),
+            ("Relatórios", self.gerar_relatorios, '#7f8c8d', '#6C7B7D')
         ]
         
-        for texto, comando, cor in botoes:
-            tk.Button(frame_parent, text=texto, 
+        for texto, comando, cor, hover_cor in botoes_info:
+            btn = tk.Button(frame_parent, text=texto, 
                      command=comando,
                      bg=cor, fg='white',
-                     font=('Arial', 12, 'bold'),
-                     width=20, height=2).pack(pady=10)
+                     font=('Arial', 14, 'bold'),
+                     width=25, height=2,
+                     cursor='hand2',
+                     relief='flat',
+                     bd=0,
+                     activebackground=hover_cor,
+                     activeforeground='white')
+            btn.pack(pady=15)
+            self.add_hover_effect(btn, cor, hover_cor)
     
     def criar_opcoes_cliente(self, frame_parent):
         """Opções para clientes"""
         tk.Label(frame_parent, text="ÁREA DO CLIENTE", 
-                font=('Arial', 18, 'bold'), 
-                bg='#f0f0f0', fg='#BA4467').pack(pady=20)
+                font=('Arial', 22, 'bold'), 
+                bg='#f0f0f0', fg='#BA4467').pack(pady=30)
         
-        botoes = [
-            ("Meu Perfil", self.abrir_meu_perfil, '#BA4467'),
-            ("Buscar Estúdios", self.buscar_estudios, '#3498db')
+        botoes_info = [
+            ("Meu Perfil", self.abrir_meu_perfil, '#BA4467', '#A53A5A'),
+            ("Buscar Estúdios", self.buscar_estudios, '#3498db', '#2980B9')
         ]
         
-        for texto, comando, cor in botoes:
-            tk.Button(frame_parent, text=texto, 
+        for texto, comando, cor, hover_cor in botoes_info:
+            btn = tk.Button(frame_parent, text=texto, 
                      command=comando,
                      bg=cor, fg='white',
-                     font=('Arial', 12, 'bold'),
-                     width=20, height=2).pack(pady=10)
+                     font=('Arial', 14, 'bold'),
+                     width=25, height=2,
+                     cursor='hand2',
+                     relief='flat',
+                     bd=0,
+                     activebackground=hover_cor,
+                     activeforeground='white')
+            btn.pack(pady=15)
+            self.add_hover_effect(btn, cor, hover_cor)
     
     def criar_opcoes_estudio(self, frame_parent):
         """Opções para estúdios"""
         tk.Label(frame_parent, text="ÁREA DO ESTÚDIO", 
-                font=('Arial', 18, 'bold'), 
-                bg='#f0f0f0', fg='#e74c3c').pack(pady=20)
+                font=('Arial', 22, 'bold'), 
+                bg='#f0f0f0', fg='#e74c3c').pack(pady=30)
         
-        botoes = [
-            ("Meu Perfil", self.abrir_meu_perfil, '#e74c3c'),
-            ("Meus Serviços", self.gerenciar_servicos, '#f39c12')
+        botoes_info = [
+            ("Meu Perfil", self.abrir_meu_perfil, '#e74c3c', '#C0392B'),
+            ("Meus Serviços", self.gerenciar_servicos, '#f39c12', '#E67E22')
         ]
         
-        for texto, comando, cor in botoes:
-            tk.Button(frame_parent, text=texto, 
+        for texto, comando, cor, hover_cor in botoes_info:
+            btn = tk.Button(frame_parent, text=texto, 
                      command=comando,
                      bg=cor, fg='white',
-                     font=('Arial', 12, 'bold'),
-                     width=20, height=2).pack(pady=10)
+                     font=('Arial', 14, 'bold'),
+                     width=25, height=2,
+                     cursor='hand2',
+                     relief='flat',
+                     bd=0,
+                     activebackground=hover_cor,
+                     activeforeground='white')
+            btn.pack(pady=15)
+            self.add_hover_effect(btn, cor, hover_cor)
     
     # Métodos das funcionalidades
     def gerenciar_usuarios(self):
@@ -344,14 +643,11 @@ class AppPrincipal:
         """Fecha janela secundária e volta para a principal"""
         janela.destroy()
         self.root.deiconify()
+        self.root.state('zoomed')
     
     def fazer_logout(self):
         """Realiza logout do usuário"""
         self.usuario_logado = None
-        for widget in self.root.winfo_children():
-            widget.destroy()
-        
-        self.root.geometry("450x600")
         self.criar_interface()
         messagebox.showinfo("Logout", "Logout realizado com sucesso!")
     
