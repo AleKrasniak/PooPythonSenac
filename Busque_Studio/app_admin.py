@@ -5,7 +5,8 @@ from cliente import Cliente
 from perfil import Perfil
 from perfilDAO import perfilDAO
 from administrador import Administrador
-from enderecoDAO import EnderecoDAO  # ADICIONADO
+from enderecoDAO import EnderecoDAO  # ADICIONADOfrom endereco import Endereco
+from endereco import Endereco
 
 
 class AppAdmin:
@@ -60,7 +61,45 @@ class AppAdmin:
         """Carrega estados usando o EnderecoDAO"""
 
         return self.endereco_dao.listar_estados()
-        
+    
+    def carregar_ufs(self):
+        """Carrega estados da API do IBGE"""
+        import requests
+        url = "https://servicodados.ibge.gov.br/api/v1/localidades/estados"
+        try:
+            resposta = requests.get(url, timeout=5)
+            resposta.raise_for_status()
+            estados = resposta.json()
+            estados.sort(key=lambda e: e['nome'])
+            return estados
+        except Exception as e:
+            messagebox.showerror("Erro", f"Falha ao carregar estados: {e}")
+            return []
+
+    def on_uf_selecionado(self, event):
+        """Carrega cidades quando UF é selecionado"""
+        import requests
+        uf = self.combo_uf.get()
+        estado = next((e for e in self.estados_ibge if e['sigla'] == uf), None)
+        if not estado:
+            self.combo_cidade['values'] = []
+            self.combo_cidade.set('')
+            return
+
+        id_estado = estado['id']
+        url = f"https://servicodados.ibge.gov.br/api/v1/localidades/estados/{id_estado}/municipios"
+        try:
+            resposta = requests.get(url, timeout=5)
+            resposta.raise_for_status()
+            cidades = [cidade['nome'] for cidade in resposta.json()]
+            cidades.sort()
+            self.combo_cidade['values'] = cidades
+            self.combo_cidade.set('')
+        except Exception as e:
+            messagebox.showerror("Erro", f"Falha ao carregar cidades: {e}")
+            self.combo_cidade['values'] = []
+            self.combo_cidade.set('')
+
     def criar_interface(self):
         # Container principal centralizado
         main_container = tk.Frame(self.root, bg='#f0f0f0')
@@ -206,23 +245,37 @@ class AppAdmin:
         row += 1
         
         # Campos de endereço individuais (editáveis)
-        campos_endereco = [
+        campos_endereco_simples = [
             ("CEP:", "entry_cep"),
             ("Rua:", "entry_rua"),
             ("Número:", "entry_numero"),
             ("Bairro:", "entry_bairro"),
-            ("Cidade:", "entry_cidade"),
-            ("UF:", "entry_uf"),
             ("Complemento:", "entry_complemento")
         ]
         
-        for label_text, attr_name in campos_endereco:
+        for label_text, attr_name in campos_endereco_simples:
             tk.Label(campos_container, text=label_text, bg='#f0f0f0', font=('Arial', 10)).grid(
                 row=row, column=0, sticky='w', pady=5, padx=(0, 15))
             entry = tk.Entry(campos_container, width=40, font=('Arial', 10))
             entry.grid(row=row, column=1, pady=5)
             setattr(self, attr_name, entry)
             row += 1
+        
+        # UF - Combobox
+        tk.Label(campos_container, text="UF:", bg='#f0f0f0', font=('Arial', 10)).grid(
+            row=row, column=0, sticky='w', pady=5, padx=(0, 15))
+        lista_uf = [uf['sigla'] for uf in self.estados_ibge]
+        self.combo_uf = ttk.Combobox(campos_container, values=lista_uf, width=37, state='readonly', font=('Arial', 10))
+        self.combo_uf.grid(row=row, column=1, pady=5)
+        self.combo_uf.bind("<<ComboboxSelected>>", self.on_uf_selecionado)
+        row += 1
+        
+        # Cidade - Combobox
+        tk.Label(campos_container, text="Cidade:", bg='#f0f0f0', font=('Arial', 10)).grid(
+            row=row, column=0, sticky='w', pady=5, padx=(0, 15))
+        self.combo_cidade = ttk.Combobox(campos_container, values=[], width=37, state='readonly', font=('Arial', 10))
+        self.combo_cidade.grid(row=row, column=1, pady=5)
+        row += 1
         
         # Perfil
         tk.Label(campos_container, text="Perfil:", bg='#f0f0f0', font=('Arial', 10)).grid(
@@ -306,9 +359,6 @@ class AppAdmin:
         # Bind para Windows
         canvas.bind("<MouseWheel>", _on_mousewheel)
         
-        # Bind para Linux
-        canvas.bind("<Button-4>", lambda e: canvas.yview_scroll(-1, "units"))
-        canvas.bind("<Button-5>", lambda e: canvas.yview_scroll(1, "units"))
         
         # Centralizar horizontalmente o conteúdo
         def centralizar_conteudo(event=None):
@@ -343,8 +393,8 @@ class AppAdmin:
             'rua': self.entry_rua.get().strip(),
             'numero': self.entry_numero.get().strip(),
             'bairro': self.entry_bairro.get().strip(),
-            'cidade': self.entry_cidade.get().strip(),
-            'uf': self.entry_uf.get().strip(),
+            'cidade': self.combo_cidade.get().strip(),
+            'uf': self.combo_uf.get().strip(),
             'complemento': self.entry_complemento.get().strip()
         }
         
@@ -383,6 +433,7 @@ class AppAdmin:
         ))
         
         # Retornar ID do novo endereço
+        
         return cursor.lastrowid
 
     def voltar_tela_principal(self):
@@ -495,27 +546,6 @@ class AppAdmin:
         except Exception as e:
             self.dao.conexao.rollback()
             messagebox.showerror("Erro", f"Erro ao criar usuário: {str(e)}")
-
-    def limpar_campos(self):
-        """Limpa todos os campos do formulário"""
-        campos = [
-            'entry_id', 'entry_nome', 'entry_email', 'entry_cpf', 'entry_telefone',
-            'entry_dt_nasc', 'entry_login', 'entry_senha', 'entry_descricao',
-            'entry_cep', 'entry_rua', 'entry_numero', 'entry_bairro',
-            'entry_cidade', 'entry_uf', 'entry_complemento'
-        ]
-        
-        for campo in campos:
-            if hasattr(self, campo):
-                getattr(self, campo).delete(0, tk.END)
-        
-        # Limpar combos
-        if hasattr(self, 'combo_perfil'):
-            self.combo_perfil.set('')
-        
-        # Limpar área de resultados
-        self.text_resultados.delete('1.0', tk.END)
-        self.text_resultados.insert('1.0', "Campos limpos! Pronto para nova operação.")
 
 
     def listar_todos(self):
@@ -943,12 +973,25 @@ class AppAdmin:
             'entry_id', 'entry_nome', 'entry_email', 'entry_cpf', 'entry_telefone',
             'entry_dt_nasc', 'entry_login', 'entry_senha', 'entry_descricao',
             'entry_cep', 'entry_rua', 'entry_numero', 'entry_bairro',
-            'entry_cidade', 'entry_uf', 'entry_complemento'
+            'entry_complemento'
         ]
         
         for campo in campos:
             if hasattr(self, campo):
                 getattr(self, campo).delete(0, tk.END)
+        
+        # Limpar combos
+        if hasattr(self, 'combo_perfil'):
+            self.combo_perfil.set('')
+        if hasattr(self, 'combo_uf'):
+            self.combo_uf.set('')
+        if hasattr(self, 'combo_cidade'):
+            self.combo_cidade.set('')
+        
+        # Limpar área de resultados
+        if hasattr(self, 'text_resultados'):
+            self.text_resultados.delete('1.0', tk.END)
+            self.text_resultados.insert('1.0', "Campos limpos! Pronto para nova operação.")
 
     def deletar_usuario(self):
         """Deleta usuário baseado no perfil selecionado"""
@@ -1012,3 +1055,8 @@ class AppAdmin:
         except Exception as e:
             self.dao.conexao.rollback()
             messagebox.showerror("Erro", f"Erro ao deletar usuário: {str(e)}")
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = AppAdmin(root)
+    root.mainloop()  # Isso mantém a janela aberta
