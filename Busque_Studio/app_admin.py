@@ -1,40 +1,65 @@
-#app_admin.py
 import tkinter as tk
 from tkinter import messagebox, ttk
 from clienteDAO import ClienteDAO
 from cliente import Cliente
+from perfil import Perfil
+from perfilDAO import perfilDAO
 from administrador import Administrador
+from enderecoDAO import EnderecoDAO  # ADICIONADO
 
 
 class AppAdmin:
     def __init__(self, root, callback_voltar=None):
         self.dao = ClienteDAO()
+        self.endereco_dao = EnderecoDAO()  # ADICIONADO
         self.root = root
         self.callback_voltar = callback_voltar
         self.perfil_id = 3  # PERFIL FIXO: Admin
         self.perfil_nome = "Admin"
         self.modo_admin = True  # MODO ADMIN ATIVADO
-        
+
         self.root.title("Área Administrativa - BusqueStudios")
         self.root.state('zoomed')  # Abre em tela cheia no Windows
         self.root.configure(bg='#f0f0f0')
-        
-        # Carrega endereços disponíveis
+    
+        #label do CPF/CNPJ para poder alterar
+        self.label_cpf_cnpj = None
+    
         self.enderecos = self.carregar_enderecos()
-        
+        self.estados = self.carregar_estados() 
+        self.estados_ibge = self.carregar_ufs()
+    
+        # Criar interface
         self.criar_interface()
-        
+    
+        # Configurar o bind do combo_perfil APÓS a interface ser criada
+        self.combo_perfil.bind('<<ComboboxSelected>>', self.on_perfil_change)
+
+    def on_perfil_change(self, event=None):
+        """Altera o label do campo CPF/CNPJ baseado no perfil selecionado"""
+        perfil_sel = self.combo_perfil.get()
+        if perfil_sel:
+            id_perfil = int(perfil_sel.split(' - ')[0])
+            
+            # Encontrar o label CPF/CNPJ e alterá-lo
+            if hasattr(self, 'label_cpf_cnpj') and self.label_cpf_cnpj:
+                if id_perfil == 3:  # Estúdio
+                    self.label_cpf_cnpj.config(text="CNPJ *:")
+                else:  # Cliente ou Admin
+                    self.label_cpf_cnpj.config(text="CPF *:")
+
     def carregar_enderecos(self):
         """Carrega endereços disponíveis do banco de dados"""
-        try:
-            cursor = self.dao.cursor
-            cursor.execute("""SELECT id_endereco, 
-                               CONCAT(rua, ', ', numero, ' - ', bairro) as endereco_completo 
-                               FROM endereco""")
-            return cursor.fetchall()
-        except:
-            # Dados de exemplo se não conseguir carregar do banco
-            return [(1, 'Rua A, 123 - Centro'), (2, 'Av. B, 456 - Jardim')]
+        cursor = self.dao.cursor
+        cursor.execute("""SELECT id_endereco, 
+                           CONCAT(rua, ', ', numero, ' - ', bairro) as endereco_completo 
+                           FROM endereco""")
+        return cursor.fetchall()
+
+    def carregar_estados(self):
+        """Carrega estados usando o EnderecoDAO"""
+
+        return self.endereco_dao.listar_estados()
         
     def criar_interface(self):
         # Container principal centralizado
@@ -107,55 +132,107 @@ class AppAdmin:
         
         row = 0
         
-        # ID Cliente (para atualizar/deletar)
-        tk.Label(campos_container, text="ID Cliente (para atualizar/deletar):", 
+        # ID (para atualizar/deletar)
+        tk.Label(campos_container, text="ID (para atualizar/deletar):", 
                 bg='#f0f0f0', font=('Arial', 10, 'bold')).grid(row=row, column=0, sticky='w', pady=5, padx=(0, 15))
-        self.entry_id_cliente = tk.Entry(campos_container, width=40, font=('Arial', 10))
-        self.entry_id_cliente.grid(row=row, column=1, pady=5)
+        self.entry_id = tk.Entry(campos_container, width=40, font=('Arial', 10))
+        self.entry_id.grid(row=row, column=1, pady=5)
         row += 1
         
-        # Campos do formulário
-        campos = [
-            ("Nome *:", "entry_nome"),
-            ("Email *:", "entry_email"),
-            ("CPF/CNPJ *:", "entry_cpf"),
-            ("Telefone *:", "entry_telefone"),
-            ("Data Nasc/Fund (YYYY-MM-DD):", "entry_dt_nasc"),
-            ("Login:", "entry_login"),
-            ("Senha:", "entry_senha")  # CAMPO DE SENHA ADICIONADO
+        # Nome
+        tk.Label(campos_container, text="Nome *:", bg='#f0f0f0', font=('Arial', 10)).grid(
+            row=row, column=0, sticky='w', pady=5, padx=(0, 15))
+        self.entry_nome = tk.Entry(campos_container, width=40, font=('Arial', 10))
+        self.entry_nome.grid(row=row, column=1, pady=5)
+        row += 1
+        
+        # Email
+        tk.Label(campos_container, text="Email *:", bg='#f0f0f0', font=('Arial', 10)).grid(
+            row=row, column=0, sticky='w', pady=5, padx=(0, 15))
+        self.entry_email = tk.Entry(campos_container, width=40, font=('Arial', 10))
+        self.entry_email.grid(row=row, column=1, pady=5)
+        row += 1
+        
+        # CPF/CNPJ - label dinâmico
+        self.label_cpf_cnpj = tk.Label(campos_container, text="CPF/CNPJ *:", bg='#f0f0f0', font=('Arial', 10))
+        self.label_cpf_cnpj.grid(row=row, column=0, sticky='w', pady=5, padx=(0, 15))
+        self.entry_cpf = tk.Entry(campos_container, width=40, font=('Arial', 10))
+        self.entry_cpf.grid(row=row, column=1, pady=5)
+        row += 1
+        
+        # Telefone
+        tk.Label(campos_container, text="Telefone *:", bg='#f0f0f0', font=('Arial', 10)).grid(
+            row=row, column=0, sticky='w', pady=5, padx=(0, 15))
+        self.entry_telefone = tk.Entry(campos_container, width=40, font=('Arial', 10))
+        self.entry_telefone.grid(row=row, column=1, pady=5)
+        row += 1
+        
+        # Data Nascimento/Fundação
+        tk.Label(campos_container, text="Data Nasc/Fund (YYYY-MM-DD):", bg='#f0f0f0', font=('Arial', 10)).grid(
+            row=row, column=0, sticky='w', pady=5, padx=(0, 15))
+        self.entry_dt_nasc = tk.Entry(campos_container, width=40, font=('Arial', 10))
+        self.entry_dt_nasc.grid(row=row, column=1, pady=5)
+        row += 1
+        
+        # Login
+        tk.Label(campos_container, text="Login:", bg='#f0f0f0', font=('Arial', 10)).grid(
+            row=row, column=0, sticky='w', pady=5, padx=(0, 15))
+        self.entry_login = tk.Entry(campos_container, width=40, font=('Arial', 10))
+        self.entry_login.grid(row=row, column=1, pady=5)
+        row += 1
+        
+        # Senha
+        tk.Label(campos_container, text="Senha:", bg='#f0f0f0', font=('Arial', 10)).grid(
+            row=row, column=0, sticky='w', pady=5, padx=(0, 15))
+        self.entry_senha = tk.Entry(campos_container, width=40, show='*', font=('Arial', 10))
+        self.entry_senha.grid(row=row, column=1, pady=5)
+        row += 1
+        
+        # Descrição (Estúdios)
+        tk.Label(campos_container, text="Descrição (Estúdios):", bg='#f0f0f0', font=('Arial', 10)).grid(
+            row=row, column=0, sticky='w', pady=5, padx=(0, 15))
+        self.entry_descricao = tk.Entry(campos_container, width=40, font=('Arial', 10))
+        self.entry_descricao.grid(row=row, column=1, pady=5)
+        row += 1
+        
+        # SEPARADOR PARA CAMPOS DE ENDEREÇO
+        separador = tk.Frame(campos_container, height=2, bg='#ddd')
+        separador.grid(row=row, column=0, columnspan=2, sticky='ew', pady=10)
+        row += 1
+        
+        tk.Label(campos_container, text="DADOS DE ENDEREÇO (Opcional - para criar novo endereço)", 
+                bg='#f0f0f0', font=('Arial', 10, 'bold'), fg='#666').grid(
+            row=row, column=0, columnspan=2, sticky='w', pady=5)
+        row += 1
+        
+        # Campos de endereço individuais (editáveis)
+        campos_endereco = [
+            ("CEP:", "entry_cep"),
+            ("Rua:", "entry_rua"),
+            ("Número:", "entry_numero"),
+            ("Bairro:", "entry_bairro"),
+            ("Cidade:", "entry_cidade"),
+            ("UF:", "entry_uf"),
+            ("Complemento:", "entry_complemento")
         ]
         
-        for label_text, attr_name in campos:
+        for label_text, attr_name in campos_endereco:
             tk.Label(campos_container, text=label_text, bg='#f0f0f0', font=('Arial', 10)).grid(
                 row=row, column=0, sticky='w', pady=5, padx=(0, 15))
-            
-            # Para o campo senha, usar show='*' para ocultar texto
-            if attr_name == "entry_senha":
-                entry = tk.Entry(campos_container, width=40, show='*', font=('Arial', 10))
-            else:
-                entry = tk.Entry(campos_container, width=40, font=('Arial', 10))
-                
+            entry = tk.Entry(campos_container, width=40, font=('Arial', 10))
             entry.grid(row=row, column=1, pady=5)
             setattr(self, attr_name, entry)
             row += 1
-
-        # Endereço
-        tk.Label(campos_container, text="Endereço:", bg='#f0f0f0', font=('Arial', 10)).grid(
-            row=row, column=0, sticky='w', pady=5, padx=(0, 15))
-        self.combo_endereco = ttk.Combobox(campos_container, width=37, state='readonly', font=('Arial', 10))
-        self.combo_endereco['values'] = [f"{id_end} - {endereco}" for id_end, endereco in self.enderecos]
-        self.combo_endereco.grid(row=row, column=1, pady=5)
-        row += 1
         
         # Perfil
         tk.Label(campos_container, text="Perfil:", bg='#f0f0f0', font=('Arial', 10)).grid(
             row=row, column=0, sticky='w', pady=5, padx=(0, 15))
         self.combo_perfil = ttk.Combobox(campos_container, width=37, state='readonly', font=('Arial', 10))
-        self.combo_perfil['values'] = ["1 - Cliente", "2 - Estúdio", "3 - Admin"]
+        self.combo_perfil['values'] = ["1 - Administrador", "2 - Cliente", "3 - Estudio"]
         self.combo_perfil.grid(row=row, column=1, pady=5)
         
         # Pré-selecionar Admin para facilitar criação de usuários admin
-        self.combo_perfil.set("3 - Admin")
+        self.combo_perfil.set("1 - Administrador")
         
         # BOTÕES
         frame_botoes = tk.Frame(content_frame, bg='#f0f0f0')
@@ -170,10 +247,11 @@ class AppAdmin:
         frame_botoes1.pack(pady=8)
         
         botoes1 = [
-            ("CRIAR USUÁRIO", self.criar_cliente, '#27ae60', 18),
-            ("LISTAR TODOS", self.listar_clientes, '#3498db', 18),
-            ("BUSCAR POR ID", self.buscar_por_id, '#f39c12', 18),
-            ("ATUALIZAR", self.atualizar_cliente, '#e67e22', 18)
+            ("CRIAR USUÁRIO", self.criar_usuario, '#27ae60', 15),
+            ("LISTAR TODOS", self.listar_todos, '#3498db', 15),
+            ("LISTAR ADMINS", self.listar_admins, '#8e44ad', 15),
+            ("LISTAR CLIENTES", self.listar_clientes, '#e67e22', 15),
+            ("LISTAR ESTÚDIOS", self.listar_estudios, '#2c3e50', 15)
         ]
         
         for texto, comando, cor, largura in botoes1:
@@ -181,16 +259,18 @@ class AppAdmin:
                            bg=cor, fg='white', font=('Arial', 10, 'bold'),
                            width=largura, height=2, cursor='hand2',
                            relief='raised', bd=2)
-            btn.pack(side='left', padx=8)
+            btn.pack(side='left', padx=5)
         
         # Segunda linha de botões
         frame_botoes2 = tk.Frame(frame_botoes, bg='#f0f0f0')
         frame_botoes2.pack(pady=8)
         
         botoes2 = [
-            ("DELETAR", self.deletar_cliente, '#e74c3c', 18),
-            ("LIMPAR CAMPOS", self.limpar_campos, '#95a5a6', 18),
-            ("CRIAR ADMIN PADRÃO", self.criar_admin_padrao, '#8e44ad', 20)
+            ("BUSCAR POR ID", self.buscar_por_id, '#f39c12', 15),
+            ("ATUALIZAR", self.atualizar_usuario, '#e74c3c', 15),
+            ("DELETAR", self.deletar_usuario, '#c0392b', 15),
+            ("LIMPAR CAMPOS", self.limpar_campos, '#95a5a6', 15),
+            ("ADMIN PADRÃO", self.criar_admin_padrao, '#9b59b6', 15)
         ]
         
         for texto, comando, cor, largura in botoes2:
@@ -198,7 +278,7 @@ class AppAdmin:
                            bg=cor, fg='white', font=('Arial', 10, 'bold'),
                            width=largura, height=2, cursor='hand2',
                            relief='raised', bd=2)
-            btn.pack(side='left', padx=8)
+            btn.pack(side='left', padx=5)
         
         # Área de resultados
         frame_resultados = tk.Frame(content_frame, bg='#f0f0f0', relief='groove', bd=2)
@@ -241,20 +321,70 @@ class AppAdmin:
         scrollable_frame.bind('<Configure>', centralizar_conteudo)
 
     def criar_botao_voltar(self, parent):
-        """Cria botão Voltar no canto superior esquerdo"""
+        """Cria o botão voltar"""
         frame_voltar = tk.Frame(parent, bg='#f0f0f0')
-        frame_voltar.pack(fill='x', pady=(0, 10))
+        frame_voltar.pack(anchor='nw', pady=(0, 20))
         
-        btn_voltar = tk.Button(frame_voltar, 
-                              text="← Voltar",
+        btn_voltar = tk.Button(frame_voltar, text="← VOLTAR", 
                               command=self.voltar_tela_principal,
-                              bg='#95a5a6', fg='white',
-                              font=('Arial', 11, 'bold'),
-                              width=12, height=2,
-                              cursor='hand2',
+                              bg='#34495e', fg='white', 
+                              font=('Arial', 10, 'bold'),
+                              width=12, height=2, cursor='hand2',
                               relief='raised', bd=2)
-        btn_voltar.pack(side='left', pady=5)
-    
+        btn_voltar.pack()
+
+    def processar_endereco(self, id_endereco_atual=None):
+        """Processa endereço: cria novo se dados fornecidos, senão mantém atual"""
+        from datetime import datetime
+        
+        # Verificar se algum campo de endereço foi preenchido
+        campos_endereco = {
+            'cep': self.entry_cep.get().strip(),
+            'rua': self.entry_rua.get().strip(),
+            'numero': self.entry_numero.get().strip(),
+            'bairro': self.entry_bairro.get().strip(),
+            'cidade': self.entry_cidade.get().strip(),
+            'uf': self.entry_uf.get().strip(),
+            'complemento': self.entry_complemento.get().strip()
+        }
+        
+        # Se nenhum campo de endereço foi preenchido, usar o primeiro endereço disponível
+        if not any(campos_endereco.values()):
+            if id_endereco_atual:
+                return id_endereco_atual
+            elif self.enderecos:
+                return self.enderecos[0][0]  # Primeiro endereço da lista
+            else:
+                return 1  # ID padrão
+        
+        # Se algum campo foi preenchido, validar campos obrigatórios
+        campos_obrigatorios = ['cep', 'rua', 'numero', 'bairro', 'cidade', 'uf']
+        for campo in campos_obrigatorios:
+            if not campos_endereco[campo]:
+                raise ValueError(f"Campo {campo.upper()} é obrigatório para criar/atualizar endereço")
+        
+        cursor = self.dao.cursor
+        agora = datetime.now()
+        
+        # Criar novo endereço usando a estrutura do EnderecoDAO
+        cursor.execute("""
+            INSERT INTO endereco (rua, numero, bairro, cidade, complemento, uf, cep, data_cadastro, data_atualizacao)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """, (
+            campos_endereco['rua'],
+            campos_endereco['numero'],
+            campos_endereco['bairro'],
+            campos_endereco['cidade'],
+            campos_endereco['complemento'],
+            campos_endereco['uf'],
+            campos_endereco['cep'],
+            agora,
+            agora
+        ))
+        
+        # Retornar ID do novo endereço
+        return cursor.lastrowid
+
     def voltar_tela_principal(self):
         """Volta para a tela principal"""
         self.root.destroy()
@@ -288,11 +418,7 @@ class AppAdmin:
             self.entry_senha.insert(0, admin_data['senha'])
             
             # Selecionar perfil Admin
-            self.combo_perfil.set("3 - Admin")
-            
-            # Selecionar primeiro endereço se disponível
-            if self.enderecos:
-                self.combo_endereco.set(f"{self.enderecos[0][0]} - {self.enderecos[0][1]}")
+            self.combo_perfil.set("1 - Administrador")
             
             self.text_resultados.delete('1.0', tk.END)
             self.text_resultados.insert('1.0', 
@@ -306,8 +432,8 @@ class AppAdmin:
         except Exception as e:
             messagebox.showerror("Erro", f"Erro ao preencher dados do admin: {str(e)}")
 
-    def criar_cliente(self):
-        """Cria um novo cliente/usuário"""
+    def criar_usuario(self):
+        """Cria um novo usuário baseado no perfil selecionado"""
         try:
             # Validar campos obrigatórios
             nome = self.entry_nome.get().strip()
@@ -321,105 +447,136 @@ class AppAdmin:
                 messagebox.showwarning("Atenção", "Preencha todos os campos obrigatórios (*)")
                 return
             
-            # Obter dados opcionais
-            dt_nasc = self.entry_dt_nasc.get().strip() or None
-            
-            # Obter endereço selecionado
-            endereco_sel = self.combo_endereco.get()
-            id_endereco = int(endereco_sel.split(' - ')[0]) if endereco_sel else self.enderecos[0][0]
-            
             # Obter perfil selecionado
             perfil_sel = self.combo_perfil.get()
-            id_perfil = int(perfil_sel.split(' - ')[0]) if perfil_sel else 1
-            
-            # Criar cliente
-            cliente = Cliente(
-                nome=nome,
-                email=email,
-                telefone=telefone,
-                cpf=cpf,
-                dt_nasc=dt_nasc,
-                id_endereco=id_endereco,
-                id_perfil=id_perfil,
-                login=login,
-                senha=senha
-            )
-            
-            resultado = self.dao.criar(cliente)
-            
-            if "sucesso" in resultado.lower():
-                self.text_resultados.delete('1.0', tk.END)
-                self.text_resultados.insert('1.0', f"✅ USUÁRIO CRIADO COM SUCESSO!\n\n{resultado}")
-                self.limpar_campos()
-            else:
-                self.text_resultados.delete('1.0', tk.END)
-                self.text_resultados.insert('1.0', f"❌ ERRO AO CRIAR USUÁRIO!\n\n{resultado}")
+            if not perfil_sel:
+                messagebox.showwarning("Atenção", "Selecione um perfil")
+                return
                 
+            id_perfil = int(perfil_sel.split(' - ')[0])
+            
+            # Obter dados opcionais
+            dt_nasc = self.entry_dt_nasc.get().strip() or None
+            descricao = self.entry_descricao.get().strip() or None
+            
+            # Processar endereço - usar primeiro endereço disponível se não especificado
+            id_endereco = self.processar_endereco()
+            
+            cursor = self.dao.cursor
+            
+            # Criar baseado no perfil
+            if id_perfil == 1:  # Administrador
+                cursor.execute("""
+                    INSERT INTO administrador (id_perfil, nome, email, login, senha)
+                    VALUES (%s, %s, %s, %s, %s)
+                """, (id_perfil, nome, email, login, senha))
+                tipo_user = "ADMINISTRADOR"
+                
+            elif id_perfil == 2:  # Cliente
+                cursor.execute("""
+                    INSERT INTO cliente (id_perfil, id_endereco, nome, dt_nasc, genero, telefone, cpf, email, login, senha)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """, (id_perfil, id_endereco, nome, dt_nasc, 'Masculino', telefone, cpf, email, login, senha))
+                tipo_user = "CLIENTE"
+                
+            elif id_perfil == 3:  # Estúdio
+                cursor.execute("""
+                    INSERT INTO estudio (id_perfil, id_endereco, nome, cnpj, descricao, login, senha)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s)
+                """, (id_perfil, id_endereco, nome, cpf, descricao or 'Estúdio de tatuagem', login, senha))
+                tipo_user = "ESTÚDIO"
+            
+            self.dao.conexao.commit()
+            
+            self.text_resultados.delete('1.0', tk.END)
+            self.text_resultados.insert('1.0', f"✅ {tipo_user} CRIADO COM SUCESSO!\n\nNome: {nome}\nEmail: {email}\nLogin: {login}")
+            self.limpar_campos()
+            
         except Exception as e:
+            self.dao.conexao.rollback()
             messagebox.showerror("Erro", f"Erro ao criar usuário: {str(e)}")
 
     def limpar_campos(self):
         """Limpa todos os campos do formulário"""
-        campos = [self.entry_id_cliente, self.entry_nome, self.entry_email, 
-                 self.entry_cpf, self.entry_telefone, self.entry_dt_nasc, 
-                 self.entry_login, self.entry_senha]
+        campos = [
+            'entry_id', 'entry_nome', 'entry_email', 'entry_cpf', 'entry_telefone',
+            'entry_dt_nasc', 'entry_login', 'entry_senha', 'entry_descricao',
+            'entry_cep', 'entry_rua', 'entry_numero', 'entry_bairro',
+            'entry_cidade', 'entry_uf', 'entry_complemento'
+        ]
         
         for campo in campos:
-            campo.delete(0, tk.END)
+            if hasattr(self, campo):
+                getattr(self, campo).delete(0, tk.END)
         
-        self.combo_endereco.set('')
-        self.combo_perfil.set('')
+        # Limpar combos
+        if hasattr(self, 'combo_perfil'):
+            self.combo_perfil.set('')
         
         # Limpar área de resultados
         self.text_resultados.delete('1.0', tk.END)
         self.text_resultados.insert('1.0', "Campos limpos! Pronto para nova operação.")
 
-    def listar_clientes(self):
-        """Lista todos os clientes formatado linha por linha"""
+
+    def listar_todos(self):
+        """Lista todos os usuários de todas as tabelas"""
         try:
-            # Buscar dados diretamente do banco para melhor formatação
             cursor = self.dao.cursor
-            cursor.execute("""
-                SELECT c.id_cliente, c.nome, c.email, c.telefone, c.cpf, 
-                       c.dt_nasc, c.login, 
-                       CASE c.id_perfil 
-                           WHEN 1 THEN 'Cliente'
-                           WHEN 2 THEN 'Estúdio' 
-                           WHEN 3 THEN 'Admin'
-                           ELSE 'Desconhecido'
-                       END as perfil,
-                       CONCAT(e.rua, ', ', e.numero, ' - ', e.bairro, ', ', e.cidade, '/', e.uf) as endereco_completo
-                FROM cliente c
-                LEFT JOIN endereco e ON c.id_endereco = e.id_endereco
-                ORDER BY c.id_cliente
-            """)
-            
-            usuarios = cursor.fetchall()
-            
-            if not usuarios:
-                self.text_resultados.delete('1.0', tk.END)
-                self.text_resultados.insert('1.0', "❌ Nenhum usuário encontrado no sistema.")
-                return
-            
-            # Formatação melhorada
-            resultado = f"📋 LISTA DE TODOS OS USUÁRIOS ({len(usuarios)} encontrados)\n"
+            resultado = "📋 LISTA COMPLETA DE USUÁRIOS\n"
             resultado += "=" * 80 + "\n\n"
             
-            for i, user in enumerate(usuarios, 1):
-                id_cliente, nome, email, telefone, cpf, dt_nasc, login, perfil, endereco = user
-                
-                resultado += f"👤 USUÁRIO #{i} (ID: {id_cliente})\n"
-                resultado += f"   Nome: {nome}\n"
-                resultado += f"   Email: {email}\n"
-                resultado += f"   Telefone: {telefone}\n"
-                resultado += f"   CPF: {cpf}\n"
-                resultado += f"   Data Nascimento: {dt_nasc if dt_nasc else 'Não informado'}\n"
-                resultado += f"   Login: {login if login else 'Não definido'}\n"
-                resultado += f"   Perfil: {perfil}\n"
-                resultado += f"   Endereço: {endereco if endereco else 'Não informado'}\n"
-                resultado += "-" * 80 + "\n"
+            # Administradores
+            cursor.execute("""
+                SELECT a.id_administrador, a.nome, a.email, a.login, 'Administrador' as tipo
+                FROM administrador a
+                ORDER BY a.id_administrador
+            """)
+            admins = cursor.fetchall()
             
-            resultado += f"\n✅ Total de usuários listados: {len(usuarios)}"
+            if admins:
+                resultado += f"👑 ADMINISTRADORES ({len(admins)})\n"
+                resultado += "-" * 40 + "\n"
+                for admin in admins:
+                    resultado += f"ID: {admin[0]} | Nome: {admin[1]} | Email: {admin[2]} | Login: {admin[3]}\n"
+                resultado += "\n"
+            
+            # Clientes
+            cursor.execute("""
+                SELECT c.id_cliente, c.nome, c.email, c.telefone, c.cpf, c.login, 'Cliente' as tipo
+                FROM cliente c
+                WHERE c.id_perfil = 2
+                ORDER BY c.id_cliente
+            """)
+            clientes = cursor.fetchall()
+            
+            if clientes:
+                resultado += f"👤 CLIENTES ({len(clientes)})\n"
+                resultado += "-" * 40 + "\n"
+                for cliente in clientes:
+                    resultado += f"ID: {cliente[0]} | Nome: {cliente[1]} | Email: {cliente[2]} | Telefone: {cliente[3]} | CPF: {cliente[4]} | Login: {cliente[5]}\n"
+                resultado += "\n"
+            
+            # Estúdios
+            cursor.execute("""
+                SELECT e.id_estudio, e.nome, e.cnpj, e.descricao, e.login, 'Estudio' as tipo
+                FROM estudio e
+                WHERE e.id_perfil = 3
+                ORDER BY e.id_estudio
+            """)
+            estudios = cursor.fetchall()
+            
+            if estudios:
+                resultado += f"🏢 ESTÚDIOS ({len(estudios)})\n"
+                resultado += "-" * 40 + "\n"
+                for estudio in estudios:
+                    resultado += f"ID: {estudio[0]} | Nome: {estudio[1]} | CNPJ: {estudio[2]} | Descrição: {estudio[3]} | Login: {estudio[4]}\n"
+                resultado += "\n"
+            
+            total = len(admins) + len(clientes) + len(estudios)
+            resultado += f"✅ Total geral: {total} usuários"
+            
+            if total == 0:
+                resultado = "❌ Nenhum usuário encontrado no sistema."
             
             self.text_resultados.delete('1.0', tk.END)
             self.text_resultados.insert('1.0', resultado)
@@ -427,133 +584,431 @@ class AppAdmin:
         except Exception as e:
             messagebox.showerror("Erro", f"Erro ao listar usuários: {str(e)}")
 
-    def buscar_por_id(self):
-        """Busca cliente por ID com formatação melhorada"""
+    def listar_admins(self):
+        """Lista apenas administradores"""
         try:
-            id_cliente = self.entry_id_cliente.get().strip()
-            if not id_cliente:
-                messagebox.showwarning("Atenção", "Informe o ID do cliente")
-                return
-            
-            # Buscar dados formatados
             cursor = self.dao.cursor
             cursor.execute("""
-                SELECT c.id_cliente, c.nome, c.email, c.telefone, c.cpf, 
-                       c.dt_nasc, c.login,
-                       CASE c.id_perfil 
-                           WHEN 1 THEN 'Cliente'
-                           WHEN 2 THEN 'Estúdio' 
-                           WHEN 3 THEN 'Admin'
-                           ELSE 'Desconhecido'
-                       END as perfil,
-                       CONCAT(e.rua, ', ', e.numero, ' - ', e.bairro, ', ', e.cidade, '/', e.uf) as endereco_completo
-                FROM cliente c
-                LEFT JOIN endereco e ON c.id_endereco = e.id_endereco
-                WHERE c.id_cliente = %s
-            """, (int(id_cliente),))
+                SELECT a.id_administrador, a.nome, a.email, a.login
+                FROM administrador a
+                ORDER BY a.id_administrador
+            """)
             
-            user = cursor.fetchone()
+            admins = cursor.fetchall()
             
-            if not user:
+            if not admins:
                 self.text_resultados.delete('1.0', tk.END)
-                self.text_resultados.insert('1.0', f"❌ Usuário com ID {id_cliente} não encontrado.")
+                self.text_resultados.insert('1.0', "❌ Nenhum administrador encontrado.")
                 return
             
-            id_cliente, nome, email, telefone, cpf, dt_nasc, login, perfil, endereco = user
+            resultado = f"👑 ADMINISTRADORES ({len(admins)})\n"
+            resultado += "=" * 60 + "\n\n"
             
-            resultado = f"🔍 USUÁRIO ENCONTRADO (ID: {id_cliente})\n"
-            resultado += "=" * 50 + "\n\n"
-            resultado += f"👤 Nome: {nome}\n"
-            resultado += f"📧 Email: {email}\n"
-            resultado += f"📱 Telefone: {telefone}\n"
-            resultado += f"🆔 CPF: {cpf}\n"
-            resultado += f"📅 Data Nascimento: {dt_nasc if dt_nasc else 'Não informado'}\n"
-            resultado += f"🔑 Login: {login if login else 'Não definido'}\n"
-            resultado += f"👥 Perfil: {perfil}\n"
-            resultado += f"🏠 Endereço: {endereco if endereco else 'Não informado'}\n"
-            resultado += "\n✅ Consulta realizada com sucesso!"
+            for i, admin in enumerate(admins, 1):
+                resultado += f"#{i} - ID: {admin[0]}\n"
+                resultado += f"   Nome: {admin[1]}\n"
+                resultado += f"   Email: {admin[2]}\n"
+                resultado += f"   Login: {admin[3]}\n"
+                resultado += "-" * 60 + "\n"
             
             self.text_resultados.delete('1.0', tk.END)
             self.text_resultados.insert('1.0', resultado)
             
         except Exception as e:
+            messagebox.showerror("Erro", f"Erro ao listar administradores: {str(e)}")
+
+    def listar_clientes(self):
+        """Lista apenas clientes (perfil 2)"""
+        try:
+            cursor = self.dao.cursor
+            cursor.execute("""
+                SELECT c.id_cliente, c.nome, c.email, c.telefone, c.cpf, c.dt_nasc, c.login
+                FROM cliente c
+                WHERE c.id_perfil = 2
+                ORDER BY c.id_cliente
+            """)
+            
+            clientes = cursor.fetchall()
+            
+            if not clientes:
+                self.text_resultados.delete('1.0', tk.END)
+                self.text_resultados.insert('1.0', "❌ Nenhum cliente encontrado.")
+                return
+            
+            resultado = f"👤 CLIENTES ({len(clientes)})\n"
+            resultado += "=" * 60 + "\n\n"
+            
+            for i, cliente in enumerate(clientes, 1):
+                resultado += f"#{i} - ID: {cliente[0]}\n"
+                resultado += f"   Nome: {cliente[1]}\n"
+                resultado += f"   Email: {cliente[2]}\n"
+                resultado += f"   Telefone: {cliente[3]}\n"
+                resultado += f"   CPF: {cliente[4]}\n"
+                resultado += f"   Data Nasc: {cliente[5] if cliente[5] else 'Não informado'}\n"
+                resultado += f"   Login: {cliente[6]}\n"
+                resultado += "-" * 60 + "\n"
+            
+            self.text_resultados.delete('1.0', tk.END)
+            self.text_resultados.insert('1.0', resultado)
+            
+        except Exception as e:
+            messagebox.showerror("Erro", f"Erro ao listar clientes: {str(e)}")
+
+    def listar_estudios(self):
+        """Lista apenas estúdios (perfil 3)"""
+        try:
+            cursor = self.dao.cursor
+            cursor.execute("""
+                SELECT e.id_estudio, e.nome, e.cnpj, e.descricao, e.login, e.tipo
+                FROM estudio e
+                WHERE e.id_perfil = 3
+                ORDER BY e.id_estudio
+            """)
+            
+            estudios = cursor.fetchall()
+            
+            if not estudios:
+                self.text_resultados.delete('1.0', tk.END)
+                self.text_resultados.insert('1.0', "❌ Nenhum estúdio encontrado.")
+                return
+            
+            resultado = f"🏢 ESTÚDIOS ({len(estudios)})\n"
+            resultado += "=" * 60 + "\n\n"
+            
+            for i, estudio in enumerate(estudios, 1):
+                resultado += f"#{i} - ID: {estudio[0]}\n"
+                resultado += f"   Nome: {estudio[1]}\n"
+                resultado += f"   CNPJ: {estudio[2]}\n"
+                resultado += f"   Descrição: {estudio[3]}\n"
+                resultado += f"   Login: {estudio[4]}\n"
+                resultado += f"   Tipo: {estudio[5] if estudio[5] else 'Não informado'}\n"
+                resultado += "-" * 60 + "\n"
+            
+            self.text_resultados.delete('1.0', tk.END)
+            self.text_resultados.insert('1.0', resultado)
+            
+        except Exception as e:
+            messagebox.showerror("Erro", f"Erro ao listar estúdios: {str(e)}")
+
+    def buscar_por_id(self):
+        """Busca usuário por ID em todas as tabelas"""
+        try:
+            id_usuario = self.entry_id.get().strip()
+            if not id_usuario:
+                messagebox.showwarning("Atenção", "Informe o ID do usuário")
+                return
+            
+            cursor = self.dao.cursor
+            resultado = f"🔍 BUSCA POR ID: {id_usuario}\n"
+            resultado += "=" * 50 + "\n\n"
+            
+            encontrado = False
+            
+            # Buscar em administradores
+            cursor.execute("""
+                SELECT a.id_administrador, a.nome, a.email, a.login, 'Administrador' as tipo
+                FROM administrador a
+                WHERE a.id_administrador = %s
+            """, (int(id_usuario),))
+            
+            admin = cursor.fetchone()
+            if admin:
+                resultado += f"👑 ADMINISTRADOR ENCONTRADO:\n"
+                resultado += f"   ID: {admin[0]}\n"
+                resultado += f"   Nome: {admin[1]}\n"
+                resultado += f"   Email: {admin[2]}\n"
+                resultado += f"   Login: {admin[3]}\n"
+                resultado += f"   Tipo: {admin[4]}\n\n"
+                encontrado = True
+                
+                # Preencher campos para edição
+                self.limpar_campos()
+                self.entry_id.insert(0, str(admin[0]))
+                self.entry_nome.insert(0, admin[1])
+                self.entry_email.insert(0, admin[2])
+                self.entry_login.insert(0, admin[3])
+                self.combo_perfil.set("1 - Administrador")
+            
+            # Buscar em clientes
+            cursor.execute("""
+                SELECT c.id_cliente, c.nome, c.email, c.telefone, c.cpf, c.dt_nasc, c.login, c.genero, c.id_endereco
+                FROM cliente c
+                WHERE c.id_cliente = %s AND c.id_perfil = 2
+            """, (int(id_usuario),))
+            
+            cliente = cursor.fetchone()
+            if cliente:
+                resultado += f"👤 CLIENTE ENCONTRADO:\n"
+                resultado += f"   ID: {cliente[0]}\n"
+                resultado += f"   Nome: {cliente[1]}\n"
+                resultado += f"   Email: {cliente[2]}\n"
+                resultado += f"   Telefone: {cliente[3]}\n"
+                resultado += f"   CPF: {cliente[4]}\n"
+                resultado += f"   Data Nasc: {cliente[5] if cliente[5] else 'Não informado'}\n"
+                resultado += f"   Login: {cliente[6]}\n"
+                resultado += f"   Gênero: {cliente[7] if cliente[7] else 'Não informado'}\n\n"
+                encontrado = True
+                
+                # Preencher campos para edição
+                self.limpar_campos()
+                self.entry_id.insert(0, str(cliente[0]))
+                self.entry_nome.insert(0, cliente[1])
+                self.entry_email.insert(0, cliente[2])
+                self.entry_telefone.insert(0, cliente[3])
+                self.entry_cpf.insert(0, cliente[4])
+                if cliente[5]:
+                    self.entry_dt_nasc.insert(0, str(cliente[5]))
+                self.entry_login.insert(0, cliente[6])
+                self.combo_perfil.set("2 - Cliente")
+            
+            # Buscar em estúdios
+            cursor.execute("""
+                SELECT e.id_estudio, e.nome, e.cnpj, e.descricao, e.login, e.tipo, e.id_endereco
+                FROM estudio e
+                WHERE e.id_estudio = %s AND e.id_perfil = 3
+            """, (int(id_usuario),))
+            
+            estudio = cursor.fetchone()
+            if estudio:
+                resultado += f"🏢 ESTÚDIO ENCONTRADO:\n"
+                resultado += f"   ID: {estudio[0]}\n"
+                resultado += f"   Nome: {estudio[1]}\n"
+                resultado += f"   CNPJ: {estudio[2]}\n"
+                resultado += f"   Descrição: {estudio[3]}\n"
+                resultado += f"   Login: {estudio[4]}\n"
+                resultado += f"   Tipo: {estudio[5] if estudio[5] else 'Não informado'}\n\n"
+                encontrado = True
+                
+                # Preencher campos para edição
+                self.limpar_campos()
+                self.entry_id.insert(0, str(estudio[0]))
+                self.entry_nome.insert(0, estudio[1])
+                self.entry_cpf.insert(0, estudio[2])  # CNPJ no campo CPF
+                self.entry_descricao.insert(0, estudio[3])
+                self.entry_login.insert(0, estudio[4])
+                self.combo_perfil.set("3 - Estudio")
+            
+            if not encontrado:
+                resultado += f"❌ Nenhum usuário encontrado com ID: {id_usuario}"
+            else:
+                resultado += "✅ Dados carregados nos campos para edição!"
+            
+            self.text_resultados.delete('1.0', tk.END)
+            self.text_resultados.insert('1.0', resultado)
+            
+        except ValueError:
+            messagebox.showerror("Erro", "ID deve ser um número válido")
+        except Exception as e:
             messagebox.showerror("Erro", f"Erro ao buscar usuário: {str(e)}")
 
-    def atualizar_cliente(self):
-        """Atualiza cliente existente"""
+    def atualizar_usuario(self):
+        """Atualiza usuário baseado no perfil selecionado - COM ENDEREÇO DAO"""
         try:
-            id_cliente = self.entry_id_cliente.get().strip()
-            if not id_cliente:
-                messagebox.showwarning("Atenção", "Informe o ID do cliente para atualizar")
+            id_usuario = self.entry_id.get().strip()
+            if not id_usuario:
+                messagebox.showwarning("Atenção", "Informe o ID do usuário para atualizar")
                 return
             
             # Validar campos obrigatórios
             nome = self.entry_nome.get().strip()
             email = self.entry_email.get().strip()
-            cpf = self.entry_cpf.get().strip()
-            telefone = self.entry_telefone.get().strip()
             
-            if not all([nome, email, cpf, telefone]):
-                messagebox.showwarning("Atenção", "Preencha todos os campos obrigatórios (*)")
+            if not all([nome, email]):
+                messagebox.showwarning("Atenção", "Nome e Email são obrigatórios")
                 return
             
-            # Obter dados
-            dt_nasc = self.entry_dt_nasc.get().strip() or None
-            login = self.entry_login.get().strip()
-            senha = self.entry_senha.get().strip()
-            
-            endereco_sel = self.combo_endereco.get()
-            id_endereco = int(endereco_sel.split(' - ')[0]) if endereco_sel else None
-            
+            # Obter perfil selecionado
             perfil_sel = self.combo_perfil.get()
-            id_perfil = int(perfil_sel.split(' - ')[0]) if perfil_sel else None
+            if not perfil_sel:
+                messagebox.showwarning("Atenção", "Selecione um perfil")
+                return
+                
+            id_perfil = int(perfil_sel.split(' - ')[0])
             
-            # Criar cliente com ID
-            cliente = Cliente(
-                nome=nome,
-                email=email,
-                telefone=telefone,
-                cpf=cpf,
-                dt_nasc=dt_nasc,
-                id_endereco=id_endereco,
-                id_perfil=id_perfil,
-                login=login,
-                senha=senha
-            )
-            cliente.id_cliente = int(id_cliente)
+            cursor = self.dao.cursor
             
-            resultado = self.dao.atualizar(cliente)
+            # Atualizar baseado no perfil
+            if id_perfil == 1:  # Administrador
+                login = self.entry_login.get().strip()
+                senha = self.entry_senha.get().strip()
+                
+                if senha:  # Se senha foi fornecida, atualizar também
+                    cursor.execute("""
+                        UPDATE administrador 
+                        SET nome = %s, email = %s, login = %s, senha = %s
+                        WHERE id_administrador = %s
+                    """, (nome, email, login, senha, int(id_usuario)))
+                else:  # Manter senha atual
+                    cursor.execute("""
+                        UPDATE administrador 
+                        SET nome = %s, email = %s, login = %s
+                        WHERE id_administrador = %s
+                    """, (nome, email, login, int(id_usuario)))
+                
+                tipo_user = "ADMINISTRADOR"
+                
+            elif id_perfil == 2:  # Cliente
+                # Buscar dados atuais do cliente
+                cursor.execute("""
+                    SELECT nome, email, telefone, cpf, dt_nasc, login, senha, id_endereco
+                    FROM cliente WHERE id_cliente = %s AND id_perfil = 2
+                """, (int(id_usuario),))
+                
+                dados_atuais = cursor.fetchone()
+                if not dados_atuais:
+                    messagebox.showwarning("Atenção", f"Cliente com ID {id_usuario} não encontrado")
+                    return
+                
+                # Usar dados do formulário se preenchidos, senão manter os atuais
+                nome = self.entry_nome.get().strip() or dados_atuais[0]
+                email = self.entry_email.get().strip() or dados_atuais[1]
+                telefone = self.entry_telefone.get().strip() or dados_atuais[2]
+                cpf = self.entry_cpf.get().strip() or dados_atuais[3]
+                dt_nasc = self.entry_dt_nasc.get().strip() or dados_atuais[4]
+                login = self.entry_login.get().strip() or dados_atuais[5]
+                senha = self.entry_senha.get().strip() or dados_atuais[6]
+                
+                # Processar endereço
+                id_endereco = self.processar_endereco(dados_atuais[7])
+                
+                cursor.execute("""
+                    UPDATE cliente 
+                    SET nome = %s, email = %s, telefone = %s, cpf = %s, dt_nasc = %s, 
+                        login = %s, senha = %s, id_endereco = %s
+                    WHERE id_cliente = %s AND id_perfil = 2
+                """, (nome, email, telefone, cpf, dt_nasc, login, senha, id_endereco, int(id_usuario)))
+                
+                tipo_user = "CLIENTE"
+                
+            elif id_perfil == 3:  # Estúdio
+                # Buscar dados atuais do estúdio
+                cursor.execute("""
+                    SELECT nome, cnpj, descricao, login, senha, id_endereco
+                    FROM estudio WHERE id_estudio = %s AND id_perfil = 3
+                """, (int(id_usuario),))
+                
+                dados_atuais = cursor.fetchone()
+                if not dados_atuais:
+                    messagebox.showwarning("Atenção", f"Estúdio com ID {id_usuario} não encontrado")
+                    return
+                
+                # Usar dados do formulário se preenchidos, senão manter os atuais
+                nome = self.entry_nome.get().strip() or dados_atuais[0]
+                cnpj = self.entry_cpf.get().strip() or dados_atuais[1]  # CNPJ está no campo CPF
+                descricao = self.entry_descricao.get().strip() or dados_atuais[2]
+                login = self.entry_login.get().strip() or dados_atuais[3]
+                senha = self.entry_senha.get().strip() or dados_atuais[4]
+                
+                # Processar endereço
+                id_endereco = self.processar_endereco(dados_atuais[5])
+                
+                cursor.execute("""
+                    UPDATE estudio 
+                    SET nome = %s, cnpj = %s, descricao = %s, login = %s, senha = %s, id_endereco = %s
+                    WHERE id_estudio = %s AND id_perfil = 3
+                """, (nome, cnpj, descricao, login, senha, id_endereco, int(id_usuario)))
+                
+                tipo_user = "ESTÚDIO"
+            
+            # Verificar se algum registro foi atualizado
+            if cursor.rowcount == 0:
+                messagebox.showwarning("Atenção", f"Nenhum {tipo_user.lower()} encontrado com ID: {id_usuario}")
+                return
+            
+            self.dao.conexao.commit()
             
             self.text_resultados.delete('1.0', tk.END)
-            if "sucesso" in resultado.lower():
-                self.text_resultados.insert('1.0', f"✅ USUÁRIO ATUALIZADO COM SUCESSO!\n\nID: {id_cliente}\n{resultado}")
-            else:
-                self.text_resultados.insert('1.0', f"❌ ERRO AO ATUALIZAR USUÁRIO!\n\n{resultado}")
+            self.text_resultados.insert('1.0', 
+                f"✅ {tipo_user} ATUALIZADO COM SUCESSO!\n\n"
+                f"ID: {id_usuario}\n"
+                f"Nome: {nome}\n"
+                f"Email: {email}\n"
+                f"{'Endereço: Atualizado' if any([self.entry_cep.get().strip(), self.entry_rua.get().strip()]) else 'Endereço: Mantido'}\n"
+                f"{'Senha: Atualizada' if self.entry_senha.get().strip() else 'Senha: Mantida'}"
+            )
             
+            # Limpar campos após sucesso
+            self.limpar_campos()
+            
+        except ValueError as ve:
+            messagebox.showerror("Erro de Validação", str(ve))
         except Exception as e:
-            messagebox.showerror("Erro", f"Erro ao atualizar: {str(e)}")
+            self.dao.conexao.rollback()
+            messagebox.showerror("Erro", f"Erro ao atualizar usuário: {str(e)}")
 
-    def deletar_cliente(self):
-        """Deleta cliente por ID"""
+
+    def limpar_campos(self):
+        """Limpa todos os campos do formulário"""
+        campos = [
+            'entry_id', 'entry_nome', 'entry_email', 'entry_cpf', 'entry_telefone',
+            'entry_dt_nasc', 'entry_login', 'entry_senha', 'entry_descricao',
+            'entry_cep', 'entry_rua', 'entry_numero', 'entry_bairro',
+            'entry_cidade', 'entry_uf', 'entry_complemento'
+        ]
+        
+        for campo in campos:
+            if hasattr(self, campo):
+                getattr(self, campo).delete(0, tk.END)
+
+    def deletar_usuario(self):
+        """Deleta usuário baseado no perfil selecionado"""
         try:
-            id_cliente = self.entry_id_cliente.get().strip()
-            if not id_cliente:
-                messagebox.showwarning("Atenção", "Informe o ID do cliente para deletar")
+            id_usuario = self.entry_id.get().strip()
+            if not id_usuario:
+                messagebox.showwarning("Atenção", "Informe o ID do usuário para deletar")
                 return
             
-            # Confirmação
-            resposta = messagebox.askyesno("Confirmar Exclusão", 
-                                         f"⚠️ ATENÇÃO!\n\nTem certeza que deseja DELETAR permanentemente o usuário ID {id_cliente}?\n\nEsta ação não pode ser desfeita!")
-            if resposta:
-                resultado = self.dao.deletar(int(id_cliente))
+            # Obter perfil selecionado
+            perfil_sel = self.combo_perfil.get()
+            if not perfil_sel:
+                messagebox.showwarning("Atenção", "Selecione um perfil")
+                return
                 
-                self.text_resultados.delete('1.0', tk.END)
-                if "sucesso" in resultado.lower():
-                    self.text_resultados.insert('1.0', f"✅ USUÁRIO DELETADO COM SUCESSO!\n\nID: {id_cliente}\n{resultado}")
-                else:
-                    self.text_resultados.insert('1.0', f"❌ ERRO AO DELETAR USUÁRIO!\n\n{resultado}")
+            id_perfil = int(perfil_sel.split(' - ')[0])
+            
+            # Confirmar exclusão
+            nome_tabela = {1: "Administrador", 2: "Cliente", 3: "Estúdio"}[id_perfil]
+            resposta = messagebox.askyesno(
+                "Confirmar Exclusão", 
+                f"Tem certeza que deseja deletar o {nome_tabela} com ID {id_usuario}?\n\nEsta ação não pode ser desfeita!"
+            )
+            
+            if not resposta:
+                return
+            
+            cursor = self.dao.cursor
+            
+            # Deletar baseado no perfil
+            if id_perfil == 1:  # Administrador
+                cursor.execute("DELETE FROM administrador WHERE id_administrador = %s", (int(id_usuario),))
+                tipo_user = "ADMINISTRADOR"
                 
-                self.limpar_campos()
+            elif id_perfil == 2:  # Cliente
+                cursor.execute("DELETE FROM cliente WHERE id_cliente = %s AND id_perfil = 2", (int(id_usuario),))
+                tipo_user = "CLIENTE"
                 
+            elif id_perfil == 3:  # Estúdio
+                cursor.execute("DELETE FROM estudio WHERE id_estudio = %s AND id_perfil = 3", (int(id_usuario),))
+                tipo_user = "ESTÚDIO"
+            
+            # Verificar se algum registro foi deletado
+            if cursor.rowcount == 0:
+                messagebox.showwarning("Atenção", f"Nenhum {tipo_user.lower()} encontrado com ID: {id_usuario}")
+                return
+            
+            self.dao.conexao.commit()
+            
+            self.text_resultados.delete('1.0', tk.END)
+            self.text_resultados.insert('1.0', 
+                f"🗑️ {tipo_user} DELETADO COM SUCESSO!\n\n"
+                f"ID: {id_usuario} foi removido permanentemente do sistema."
+            )
+            
+            # Limpar campos após deletar
+            self.limpar_campos()
+            
+        except ValueError:
+            messagebox.showerror("Erro", "ID deve ser um número válido")
         except Exception as e:
-            messagebox.showerror("Erro", f"Erro ao deletar: {str(e)}")
+            self.dao.conexao.rollback()
+            messagebox.showerror("Erro", f"Erro ao deletar usuário: {str(e)}")

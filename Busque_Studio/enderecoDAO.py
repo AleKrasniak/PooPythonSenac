@@ -4,19 +4,20 @@ import mysql.connector
 import requests
 from mysql.connector import Error
 import time 
+
 class DatabaseConnectionError(Exception):
     """Exceção para erros de conexão com o banco"""
     pass
 
 class EnderecoDAO:
     def __init__(self):
-        self.connection = mysql.connector.connect(
+        self.conexao = mysql.connector.connect(  # MUDOU: connection -> conexao
             host="localhost",
             user="root",
             password="",
             database="busquestudios2"
         )
-        self.cursor = self.connection.cursor(dictionary=True)
+        self.cursor = self.conexao.cursor(dictionary=True)  # MUDOU: connection -> conexao
         self._verificar_conexao()  # <-- Verifica logo ao iniciar
 
     # --- FUNÇÃO ANTI-DESCONEXÃO ---
@@ -24,10 +25,10 @@ class EnderecoDAO:
         """Versão turbo com mais tentativas e logs"""
         for tentativa in range(3):  # Tenta 3 vezes
             try:
-                if not self.connection.is_connected():
+                if not self.conexao.is_connected():  # MUDOU: connection -> conexao
                     print(f"⚠️ Tentando reconectar ({tentativa+1}/3)...")
-                    self.connection.reconnect(attempts=3, delay=1)
-                    self.cursor = self.connection.cursor(dictionary=True)
+                    self.conexao.reconnect(attempts=3, delay=1)  # MUDOU: connection -> conexao
+                    self.cursor = self.conexao.cursor(dictionary=True)  # MUDOU: connection -> conexao
                 return  # Conexão OK!
             except Error as err:
                 if tentativa == 2:  # Última tentativa
@@ -86,4 +87,4 @@ class EnderecoDAO:
 
     def fechar_conexao(self):
         self.cursor.close()
-        self.conexao.close()
+        self.conexao.close()  # MUDOU: connection -> conexao
