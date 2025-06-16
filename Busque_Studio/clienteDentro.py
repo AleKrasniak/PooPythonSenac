@@ -119,7 +119,7 @@ class ClienteDentro:
     
     def ver_perfil(self):
         #popup desenvolimento
-        messagebox.showinfo("Função em Desenvolvimento")
+        messagebox.showinfo("Atenção","Função em Desenvolvimento")
     
     def obter_cidade_cliente(self):
         #cidade do cliente pelo endereco

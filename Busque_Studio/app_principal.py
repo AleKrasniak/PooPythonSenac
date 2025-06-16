@@ -575,7 +575,7 @@ class AppPrincipal:
         
     def abrir_area_admin(self):
         from app_admin import AppAdmin
-        senha = simpledialog.askstring("Acesso Restrito", "Digite a senha de administrador:", show='*')
+        senha = simpledialog.askstring("Acesso Restrito", "Digite a senha de administrador: (123)", show='*')
         
         if senha == "123":
             self.root.withdraw()
