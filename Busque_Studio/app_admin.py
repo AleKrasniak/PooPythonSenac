@@ -1,12 +1,13 @@
 import tkinter as tk
 from tkinter import messagebox, ttk
 from clienteDAO import ClienteDAO
-from cliente import Cliente
-from perfil import Perfil
-from perfilDAO import perfilDAO
-from administrador import Administrador
-from enderecoDAO import EnderecoDAO  # ADICIONADOfrom endereco import Endereco
-from endereco import Endereco
+from enderecoDAO import EnderecoDAO
+# from perfil import Perfil
+# from perfilDAO import perfilDAO
+# from administrador import Administrador
+# from administratorDAO import AdministradorDAO
+# from endereco import Endereco
+
 
 
 class AppAdmin:
@@ -615,11 +616,10 @@ class AppAdmin:
             messagebox.showerror("Erro", f"Erro ao listar usuários: {str(e)}")
 
     def listar_admins(self):
-        """Lista apenas administradores"""
         try:
             cursor = self.dao.cursor
             cursor.execute("""
-                SELECT a.id_administrador, a.nome, a.email, a.login
+                SELECT a.id_administrador, a.nome, a.email, a.login, a.senha
                 FROM administrador a
                 ORDER BY a.id_administrador
             """)
@@ -639,6 +639,7 @@ class AppAdmin:
                 resultado += f"   Nome: {admin[1]}\n"
                 resultado += f"   Email: {admin[2]}\n"
                 resultado += f"   Login: {admin[3]}\n"
+                resultado += f"   Senha: {admin[4]}\n"
                 resultado += "-" * 60 + "\n"
             
             self.text_resultados.delete('1.0', tk.END)
@@ -648,11 +649,10 @@ class AppAdmin:
             messagebox.showerror("Erro", f"Erro ao listar administradores: {str(e)}")
 
     def listar_clientes(self):
-        """Lista apenas clientes (perfil 2)"""
         try:
             cursor = self.dao.cursor
             cursor.execute("""
-                SELECT c.id_cliente, c.nome, c.email, c.telefone, c.cpf, c.dt_nasc, c.login
+                SELECT c.id_cliente, c.nome, c.email, c.telefone, c.cpf, c.dt_nasc, c.login, c.senha
                 FROM cliente c
                 WHERE c.id_perfil = 2
                 ORDER BY c.id_cliente
@@ -676,6 +676,7 @@ class AppAdmin:
                 resultado += f"   CPF: {cliente[4]}\n"
                 resultado += f"   Data Nasc: {cliente[5] if cliente[5] else 'Não informado'}\n"
                 resultado += f"   Login: {cliente[6]}\n"
+                resultado += f"   Senha: {cliente[7]}\n"
                 resultado += "-" * 60 + "\n"
             
             self.text_resultados.delete('1.0', tk.END)
@@ -685,11 +686,10 @@ class AppAdmin:
             messagebox.showerror("Erro", f"Erro ao listar clientes: {str(e)}")
 
     def listar_estudios(self):
-        """Lista apenas estúdios (perfil 3)"""
         try:
             cursor = self.dao.cursor
             cursor.execute("""
-                SELECT e.id_estudio, e.nome, e.cnpj, e.descricao, e.login, e.tipo
+                SELECT e.id_estudio, e.nome, e.cnpj, e.descricao, e.login, e.tipo, e.senha
                 FROM estudio e
                 WHERE e.id_perfil = 3
                 ORDER BY e.id_estudio
@@ -711,7 +711,9 @@ class AppAdmin:
                 resultado += f"   CNPJ: {estudio[2]}\n"
                 resultado += f"   Descrição: {estudio[3]}\n"
                 resultado += f"   Login: {estudio[4]}\n"
+                resultado += f"   Login: {estudio[6]}\n"
                 resultado += f"   Tipo: {estudio[5] if estudio[5] else 'Não informado'}\n"
+
                 resultado += "-" * 60 + "\n"
             
             self.text_resultados.delete('1.0', tk.END)

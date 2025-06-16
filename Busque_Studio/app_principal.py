@@ -22,7 +22,7 @@ class AppPrincipal:
         self.centralizar_janela()
         
         # Configuração de cor de fundo
-        self.root.configure(bg='#2c3e50')
+        self.root.configure(bg='#F7F7FF')
         
         # Tamanho mínimo
         self.root.minsize(700, 600)  # Reduzido para melhor compatibilidade
@@ -49,13 +49,13 @@ class AppPrincipal:
             widget.destroy()
         
         # Container principal com scroll
-        main_frame = tk.Frame(self.root, bg='#2c3e50')
+        main_frame = tk.Frame(self.root, bg='#F7F7FF')
         main_frame.pack(fill='both', expand=True)
         
         # Canvas para scroll
-        canvas = tk.Canvas(main_frame, bg='#2c3e50', highlightthickness=0)
+        canvas = tk.Canvas(main_frame, bg='#F7F7FF', highlightthickness=0)
         scrollbar = ttk.Scrollbar(main_frame, orient="vertical", command=canvas.yview)
-        scrollable_frame = tk.Frame(canvas, bg='#2c3e50')
+        scrollable_frame = tk.Frame(canvas, bg='#F7F7FF')
         
         # Configuração do scroll
         def atualizar_scroll(event):
@@ -86,11 +86,11 @@ class AppPrincipal:
         canvas.bind_all("<MouseWheel>", _on_mousewheel)
         
         # Container centralizado para o conteúdo
-        content_container = tk.Frame(scrollable_frame, bg='#2c3e50')
+        content_container = tk.Frame(scrollable_frame, bg='#F7F7FF')
         content_container.pack(expand=True, fill='both')
         
         # Frame centralizado para todo o conteúdo
-        center_frame = tk.Frame(content_container, bg='#2c3e50')
+        center_frame = tk.Frame(content_container, bg='#F7F7FF')
         center_frame.place(relx=0.5, rely=0.5, anchor='center')
         
         # Cabeçalho
@@ -100,7 +100,7 @@ class AppPrincipal:
         self.criar_secao_login(center_frame)
         
         # Separador
-        separator = tk.Frame(center_frame, height=2, bg='#34495e', width=500)
+        separator = tk.Frame(center_frame, height=2, bg='#355070', width=500)
         separator.pack(pady=10)
         separator.pack_propagate(False)
         
@@ -132,11 +132,11 @@ class AppPrincipal:
             widget.destroy()
         
         # Container principal centralizado
-        main_container = tk.Frame(self.root, bg='#2c3e50')
+        main_container = tk.Frame(self.root, bg='#355070')
         main_container.pack(fill='both', expand=True)
         
         # Frame centralizado para todo o conteúdo
-        center_frame = tk.Frame(main_container, bg='#2c3e50')
+        center_frame = tk.Frame(main_container, bg='#355070')
         center_frame.place(relx=0.5, rely=0.5, anchor='center')
         
         # Cabeçalho
@@ -146,7 +146,7 @@ class AppPrincipal:
         self.criar_secao_login(center_frame)
         
         # Separador
-        separator = tk.Frame(center_frame, height=2, bg='#34495e', width=500)
+        separator = tk.Frame(center_frame, height=2, bg='#355070', width=500)
         separator.pack(pady=10)
         separator.pack_propagate(False)
         
@@ -154,22 +154,15 @@ class AppPrincipal:
         self.criar_secao_cadastro(center_frame)
     
     def criar_cabecalho(self, parent):
-        """Cria o cabeçalho da aplicação"""
-        header_frame = tk.Frame(parent, bg='#2c3e50')
+        header_frame = tk.Frame(parent, bg='#355070')
         header_frame.pack(pady=(0, 15))
         
         title_label = tk.Label(header_frame, text="BUSQUE STUDIOS", 
-                font=('Arial', 26, 'bold'), 
-                bg='#2c3e50', fg='white')
+                font=('Arial', 26, 'bold'), bg='#355070', fg='#F7F7FF')
         title_label.pack()
         
-        subtitle_label = tk.Label(header_frame, text="Sistema de Gestão", 
-                font=('Arial', 12), 
-                bg='#2c3e50', fg='#bdc3c7')
-        subtitle_label.pack(pady=(3, 0))
         
     def criar_secao_login(self, parent):
-        """Cria a seção de login"""
         frame_login = tk.Frame(parent, bg='#34495e', relief='ridge', bd=2)
         frame_login.pack(pady=10)
         
@@ -209,15 +202,13 @@ class AppPrincipal:
         self.entry_senha.bind('<Return>', lambda event: self.fazer_login())
         
     def criar_secao_cadastro(self, parent):
-        """Cria a seção de cadastro"""
-        cadastro_frame = tk.Frame(parent, bg='#2c3e50')
+        cadastro_frame = tk.Frame(parent, bg='#355070')
         cadastro_frame.pack(pady=10)
         
         tk.Label(cadastro_frame, text="OU CADASTRE-SE", 
-                font=('Arial', 16, 'bold'), 
-                bg='#2c3e50', fg='#bdc3c7').pack(pady=(0, 15))
+                font=('Arial', 16, 'bold'))
         
-        frame_botoes_cadastro = tk.Frame(cadastro_frame, bg='#2c3e50')
+        frame_botoes_cadastro = tk.Frame(cadastro_frame, bg='#355070')
         frame_botoes_cadastro.pack(pady=5)
         
         # Botões de cadastro
@@ -240,7 +231,7 @@ class AppPrincipal:
             frame_botoes_cadastro,
             text="CADASTRAR\nESTÚDIO",
             command=self.abrir_cadastro_estudio,
-            bg='#e74c3c',
+            bg='#BA4467',
             fg='white',
             font=('Arial', 11, 'bold'),
             width=16,
@@ -255,7 +246,7 @@ class AppPrincipal:
             cadastro_frame,
             text="ÁREA ADMINISTRATIVA",
             command=self.abrir_area_admin,
-            bg='#95a5a6',
+            bg='#120118',
             fg='white',
             font=('Arial', 10, 'bold'),
             width=22,
@@ -520,45 +511,7 @@ class AppPrincipal:
         elif tipo_usuario == 'estudio':
             # Para estúdios, mostra mensagem de desenvolvimento
             pass
-    
-    def criar_opcoes_admin(self, frame_parent):
-        """Opções para admin"""
-        tk.Label(frame_parent, text="ÁREA ADMINISTRATIVA", 
-                font=('Arial', 22, 'bold'), 
-                bg='#f0f0f0', fg='#95a5a6').pack(pady=30)
         
-        botoes_info = [
-            ("Gerenciar Usuários", self.gerenciar_usuarios, '#95a5a6'),
-            ("Aprovar Estúdios", self.aprovar_estudios, '#34495e'),
-            ("Relatórios", self.gerar_relatorios, '#7f8c8d')
-        ]
-        
-        for texto, comando, cor in botoes_info:
-            btn = tk.Button(
-                frame_parent,
-                text=texto,
-                command=comando,
-                bg=cor,
-                fg='white',
-                font=('Arial', 14, 'bold'),
-                width=25,
-                height=2,
-                cursor='hand2',
-                relief='raised',
-                bd=2
-            )
-            btn.pack(pady=15)
-    
-    # Métodos das funcionalidades
-    def gerenciar_usuarios(self):
-        messagebox.showinfo("Admin", "Funcionalidade 'Gerenciar Usuários' em desenvolvimento!")
-
-    def aprovar_estudios(self):
-        messagebox.showinfo("Admin", "Funcionalidade 'Aprovar Estúdios' em desenvolvimento!")
-
-    def gerar_relatorios(self):
-        messagebox.showinfo("Admin", "Funcionalidade 'Relatórios' em desenvolvimento!")
-    
     def abrir_cadastro_cliente(self):
         from app_cliente import AppCliente
         self.root.withdraw()

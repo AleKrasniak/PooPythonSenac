@@ -201,7 +201,7 @@ class AppEstudio:
                 widget = ttk.Combobox(linha_frame, values=[], width=27, state='readonly')
             elif attr_name == "combo_tipo":
                 widget = ttk.Combobox(linha_frame, 
-                                    values=['Tatuagem', 'Fotografia', 'Música', 'Arte', 'Design', 'Áudio', 'Vídeo'], 
+                                    values=['Tatuagem', 'Piercing', 'Tatuagem e Piercing'], 
                                     width=27, state='readonly')
             else:
                 widget = tk.Entry(linha_frame, width=30, show='*' if is_password else '', 

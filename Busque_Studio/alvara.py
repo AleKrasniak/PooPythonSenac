@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import messagebox
 import mysql.connector
 from datetime import datetime, date
-from estudio import Estudio
+# from estudio import Estudio
 
 class Alvara:
     def __init__(self, id_alvara=None, id_estudio=None, numero_alvara=None, 

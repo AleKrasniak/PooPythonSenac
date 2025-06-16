@@ -56,12 +56,14 @@ class ClienteDentro:
             text="Ver Perfil",
             command=self.ver_perfil,
             font=('Arial', 14, 'bold'),
-            bg='#4CAF50',
+            bg='#27ae60', 
             fg='white',
             padx=40,
             pady=15,
-            cursor='hand2'
-        )
+            cursor='hand2',
+            relief='groove',
+            bd=2
+        ) 
         self.btn_ver_perfil.pack(side='left', padx=15)
         
         #buscar Estúdios
@@ -70,11 +72,13 @@ class ClienteDentro:
             text="Buscar Estúdios",
             command=self.buscar_estudios,
             font=('Arial', 14, 'bold'),
-            bg='#2196F3',
+            bg='#BA4467',
             fg='white',
             padx=40,
             pady=15,
-            cursor='hand2'
+            cursor='hand2',
+            relief='groove',
+            bd=2
         )
         self.btn_buscar_estudios.pack(side='left', padx=15)
         
@@ -377,7 +381,7 @@ class ClienteDentro:
             text="Ver Detalhes",
             command=lambda e=estudio: self.ver_detalhes_estudio(e),
             font=('Arial', 10, 'bold'),
-            bg='#FF9800',
+            bg="#64152D",
             fg='white',
             padx=20,
             pady=8,

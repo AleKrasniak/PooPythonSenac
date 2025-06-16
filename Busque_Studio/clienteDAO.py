@@ -1,8 +1,8 @@
 import tkinter as tk
 from tkinter import messagebox
 import mysql.connector
-from perfil import Perfil
-from endereco import Endereco
+# from perfil import Perfil
+# from endereco import Endereco
 
 class ClienteDAO:
     def __init__(self):
