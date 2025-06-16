@@ -7,6 +7,7 @@ from clienteDAO import ClienteDAO
 from endereco import Endereco
 from enderecoDAO import EnderecoDAO
 
+
 class AppCliente:
     def __init__(self, root):
         self.root = root

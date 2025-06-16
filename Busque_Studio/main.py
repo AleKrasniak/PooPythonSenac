@@ -1,8 +1,6 @@
 from app_principal import AppPrincipal
 
 
-
-
 def main():
     """Função principal para iniciar o sistema"""
     try:

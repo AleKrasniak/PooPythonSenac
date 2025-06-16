@@ -30,7 +30,28 @@ class AppPrincipal:
         self.usuario_logado = None
         
         self.criar_interface()
-        
+
+    def criar_botao_arredondado(self, parent, texto, comando, cor_normal, cor_hover, width=15, height=2, font=('Arial', 12, 'bold')):
+        """Cria botões com bordas arredondadas simuladas"""
+        btn = tk.Button(
+            parent,
+            text=texto,
+            command=comando,
+            bg=cor_normal,
+            fg='white',
+            font=font,
+            width=width,
+            height=height,
+            borderwidth=0,
+            highlightthickness=0,
+            relief='flat',
+            cursor='hand2',
+            activebackground=cor_hover,
+            activeforeground='white'
+        )
+        self.add_hover_effect(btn, cor_normal, cor_hover)
+        return btn
+
     def centralizar_janela(self):
         """Centraliza a janela na tela"""
         self.root.update_idletasks()
@@ -167,110 +188,90 @@ class AppPrincipal:
         subtitle_label.pack(pady=(3, 0))
         
     def criar_secao_login(self, parent):
-        """Cria a seção de login com campos e botão"""
-        # Frame de login
+        """Cria a seção de login com botões arredondados"""
         frame_login = tk.Frame(parent, bg='#34495e', relief='ridge', bd=2)
         frame_login.pack(pady=10)
         
-        # Título do login
         login_title = tk.Label(frame_login, text="FAZER LOGIN", 
-                font=('Arial', 15, 'bold'), 
-                bg='#34495e', fg='white')
+                             font=('Arial', 15, 'bold'), 
+                             bg='#34495e', fg='white')
         login_title.pack(pady=12)
         
-        # Frame para campos
         frame_campos = tk.Frame(frame_login, bg='#34495e')
         frame_campos.pack(pady=10, padx=30)
         
-        # Campo de Login
-        tk.Label(frame_campos, text="Login:", 
-                font=('Arial', 11, 'bold'), bg='#34495e', fg='white').pack(anchor='w', pady=(0, 3))
+        # Campos de login/senha (mantidos originais)
+        tk.Label(frame_campos, text="Login:", font=('Arial', 11, 'bold'), bg='#34495e', fg='white').pack(anchor='w', pady=(0, 3))
         self.entry_login = tk.Entry(frame_campos, font=('Arial', 11), relief='flat', bd=5, width=35)
         self.entry_login.pack(pady=(0, 10))
         
-        # Campo de Senha
-        tk.Label(frame_campos, text="Senha:", 
-                font=('Arial', 11, 'bold'), bg='#34495e', fg='white').pack(anchor='w', pady=(0, 3))
+        tk.Label(frame_campos, text="Senha:", font=('Arial', 11, 'bold'), bg='#34495e', fg='white').pack(anchor='w', pady=(0, 3))
         self.entry_senha = tk.Entry(frame_campos, font=('Arial', 11), show='*', relief='flat', bd=5, width=35)
         self.entry_senha.pack(pady=(0, 12))
         
-        # Botão de Login
-        btn_login = tk.Button(frame_campos, text="ENTRAR", 
-                 command=self.fazer_login,
-                 bg='#27ae60', fg='white',
-                 font=('Arial', 12, 'bold'),
-                 height=2, width=15,
-                 cursor='hand2',
-                 relief='flat',
-                 bd=0,
-                 activebackground='#229954',
-                 activeforeground='white')
+        # Botão arredondado
+        btn_login = self.criar_botao_arredondado(
+            frame_campos, 
+            "ENTRAR", 
+            self.fazer_login,
+            '#27ae60', 
+            '#229954',
+            width=15,
+            height=2
+        )
         btn_login.pack(pady=(0, 15))
         
-        # Efeito de hover
-        self.add_hover_effect(btn_login, '#27ae60', '#229954')
-        
-        # Bind Enter para login
         self.entry_senha.bind('<Return>', lambda event: self.fazer_login())
         
     def criar_secao_cadastro(self, parent):
-        """Cria a seção de cadastro com botões"""
-        # Frame de cadastro
+        """Cria a seção de cadastro com botões arredondados"""
         cadastro_frame = tk.Frame(parent, bg='#2c3e50')
         cadastro_frame.pack(pady=10)
         
-        # Título
         tk.Label(cadastro_frame, text="OU CADASTRE-SE", 
                 font=('Arial', 16, 'bold'), 
                 bg='#2c3e50', fg='#bdc3c7').pack(pady=(0, 15))
         
-        # Frame para botões de cadastro
         frame_botoes_cadastro = tk.Frame(cadastro_frame, bg='#2c3e50')
         frame_botoes_cadastro.pack(pady=5)
         
-        # Botão Cadastrar Cliente
-        btn_cliente = tk.Button(frame_botoes_cadastro, 
-                 text="CADASTRAR\nCLIENTE",
-                 command=self.abrir_cadastro_cliente,
-                 bg='#BA4467', fg='white',
-                 font=('Arial', 11, 'bold'),
-                 height=3, width=16,
-                 cursor='hand2',
-                 relief='flat',
-                 bd=0,
-                 activebackground='#A53A5A',
-                 activeforeground='white')
+        # Botões arredondados
+        btn_cliente = self.criar_botao_arredondado(
+            frame_botoes_cadastro,
+            "CADASTRAR\nCLIENTE",
+            self.abrir_cadastro_cliente,
+            '#BA4467',
+            '#A53A5A',
+            width=16,
+            height=3,
+            font=('Arial', 11, 'bold')
+        )
         btn_cliente.pack(side='left', padx=10)
-        self.add_hover_effect(btn_cliente, '#BA4467', '#A53A5A')
         
-        # Botão Cadastrar Estúdio
-        btn_estudio = tk.Button(frame_botoes_cadastro, 
-                 text="CADASTRAR\nESTÚDIO",
-                 command=self.abrir_cadastro_estudio,
-                 bg='#e74c3c', fg='white',
-                 font=('Arial', 11, 'bold'),
-                 height=3, width=16,
-                 cursor='hand2',
-                 relief='flat',
-                 bd=0,
-                 activebackground='#C0392B',
-                 activeforeground='white')
+        btn_estudio = self.criar_botao_arredondado(
+            frame_botoes_cadastro,
+            "CADASTRAR\nESTÚDIO",
+            self.abrir_cadastro_estudio,
+            '#e74c3c',
+            '#C0392B',
+            width=16,
+            height=3,
+            font=('Arial', 11, 'bold')
+        )
         btn_estudio.pack(side='left', padx=10)
-        self.add_hover_effect(btn_estudio, '#e74c3c', '#C0392B')
         
-        # Botão Admin
-        btn_admin = tk.Button(cadastro_frame, 
-                 text="ÁREA ADMINISTRATIVA",
-                 command=self.abrir_area_admin,
-                 bg='#95a5a6', fg='white',
-                 font=('Arial', 10, 'bold'),
-                 height=2, width=22,
-                 cursor='hand2',
-                 relief='flat',
-                 bd=0,
-                 activebackground='#7F8C8D',
-                 activeforeground='white')
+        btn_admin = self.criar_botao_arredondado(
+            cadastro_frame,
+            "ÁREA ADMINISTRATIVA",
+            self.abrir_area_admin,
+            '#95a5a6',
+            '#7F8C8D',
+            width=22,
+            height=2,
+            font=('Arial', 10, 'bold')
+        )
         btn_admin.pack(pady=(20, 10))
+
         self.add_hover_effect(btn_admin, '#95a5a6', '#7F8C8D')
     
     def add_hover_effect(self, button, normal_color, hover_color):
@@ -519,7 +520,7 @@ class AppPrincipal:
             self.criar_opcoes_estudio(frame_parent)
     
     def criar_opcoes_admin(self, frame_parent):
-        """Opções para administradores"""
+        """Opções para admin com botões arredondados"""
         tk.Label(frame_parent, text="ÁREA ADMINISTRATIVA", 
                 font=('Arial', 22, 'bold'), 
                 bg='#f0f0f0', fg='#95a5a6').pack(pady=30)
@@ -531,16 +532,16 @@ class AppPrincipal:
         ]
         
         for texto, comando, cor, hover_cor in botoes_info:
-            btn = tk.Button(frame_parent, text=texto, 
-                     command=comando,
-                     bg=cor, fg='white',
-                     font=('Arial', 14, 'bold'),
-                     width=25, height=2,
-                     cursor='hand2',
-                     relief='flat',
-                     bd=0,
-                     activebackground=hover_cor,
-                     activeforeground='white')
+            btn = self.criar_botao_arredondado(
+                frame_parent,
+                texto,
+                comando,
+                cor,
+                hover_cor,
+                width=25,
+                height=2,
+                font=('Arial', 14, 'bold')
+            )
             btn.pack(pady=15)
             self.add_hover_effect(btn, cor, hover_cor)
     
