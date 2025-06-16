@@ -124,7 +124,7 @@ class ClienteDentro:
     def obter_cidade_cliente(self):
         #cidade do cliente pelo endereco
         try:
-            print("=== DEBUG: Iniciando busca da cidade ===")
+            print("DEBUG AAAAA")
             print(f"Cliente logado: {self.cliente_logado}")
             
             #id do cliente
@@ -196,14 +196,14 @@ class ClienteDentro:
             print(f"Cidade extraída: '{cidade}'")
             
             if cidade:
-                print(f"✅ Cidade encontrada: {cidade}")
+                print(f"Cidade encontrada: {cidade}")
                 return cidade
             else:
-                print("❌ Campo cidade vazio no endereço")
+                print("Campo cidade vazio no endereço")
                 return None
             
         except Exception as e:
-            print(f"❌ Erro ao obter cidade do cliente: {e}")
+            print(f"Erro ao obter cidade do cliente: {e}")
             import traceback
             traceback.print_exc()
             return None
