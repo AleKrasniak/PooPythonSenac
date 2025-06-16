@@ -5,6 +5,8 @@ from clienteDAO import ClienteDAO
 from estudioDAO import EstudioDAO
 import sys
 from pathlib import Path
+from clienteDentro import ClienteDentro
+
 sys.path.append(str(Path(__file__).parent))
 
 class AppPrincipal:
@@ -30,27 +32,6 @@ class AppPrincipal:
         self.usuario_logado = None
         
         self.criar_interface()
-
-    def criar_botao_arredondado(self, parent, texto, comando, cor_normal, cor_hover, width=15, height=2, font=('Arial', 12, 'bold')):
-        """Cria botões com bordas arredondadas simuladas"""
-        btn = tk.Button(
-            parent,
-            text=texto,
-            command=comando,
-            bg=cor_normal,
-            fg='white',
-            font=font,
-            width=width,
-            height=height,
-            borderwidth=0,
-            highlightthickness=0,
-            relief='flat',
-            cursor='hand2',
-            activebackground=cor_hover,
-            activeforeground='white'
-        )
-        self.add_hover_effect(btn, cor_normal, cor_hover)
-        return btn
 
     def centralizar_janela(self):
         """Centraliza a janela na tela"""
@@ -188,7 +169,7 @@ class AppPrincipal:
         subtitle_label.pack(pady=(3, 0))
         
     def criar_secao_login(self, parent):
-        """Cria a seção de login com botões arredondados"""
+        """Cria a seção de login"""
         frame_login = tk.Frame(parent, bg='#34495e', relief='ridge', bd=2)
         frame_login.pack(pady=10)
         
@@ -200,7 +181,7 @@ class AppPrincipal:
         frame_campos = tk.Frame(frame_login, bg='#34495e')
         frame_campos.pack(pady=10, padx=30)
         
-        # Campos de login/senha (mantidos originais)
+        # Campos de login/senha
         tk.Label(frame_campos, text="Login:", font=('Arial', 11, 'bold'), bg='#34495e', fg='white').pack(anchor='w', pady=(0, 3))
         self.entry_login = tk.Entry(frame_campos, font=('Arial', 11), relief='flat', bd=5, width=35)
         self.entry_login.pack(pady=(0, 10))
@@ -209,22 +190,26 @@ class AppPrincipal:
         self.entry_senha = tk.Entry(frame_campos, font=('Arial', 11), show='*', relief='flat', bd=5, width=35)
         self.entry_senha.pack(pady=(0, 12))
         
-        # Botão arredondado
-        btn_login = self.criar_botao_arredondado(
+        # Botão de login
+        btn_login = tk.Button(
             frame_campos, 
-            "ENTRAR", 
-            self.fazer_login,
-            '#27ae60', 
-            '#229954',
+            text="ENTRAR", 
+            command=self.fazer_login,
+            bg='#27ae60', 
+            fg='white',
+            font=('Arial', 12, 'bold'),
             width=15,
-            height=2
+            height=2,
+            cursor='hand2',
+            relief='raised',
+            bd=2
         )
         btn_login.pack(pady=(0, 15))
         
         self.entry_senha.bind('<Return>', lambda event: self.fazer_login())
         
     def criar_secao_cadastro(self, parent):
-        """Cria a seção de cadastro com botões arredondados"""
+        """Cria a seção de cadastro"""
         cadastro_frame = tk.Frame(parent, bg='#2c3e50')
         cadastro_frame.pack(pady=10)
         
@@ -235,55 +220,51 @@ class AppPrincipal:
         frame_botoes_cadastro = tk.Frame(cadastro_frame, bg='#2c3e50')
         frame_botoes_cadastro.pack(pady=5)
         
-        # Botões arredondados
-        btn_cliente = self.criar_botao_arredondado(
+        # Botões de cadastro
+        btn_cliente = tk.Button(
             frame_botoes_cadastro,
-            "CADASTRAR\nCLIENTE",
-            self.abrir_cadastro_cliente,
-            '#BA4467',
-            '#A53A5A',
+            text="CADASTRAR\nCLIENTE",
+            command=self.abrir_cadastro_cliente,
+            bg='#BA4467',
+            fg='white',
+            font=('Arial', 11, 'bold'),
             width=16,
             height=3,
-            font=('Arial', 11, 'bold')
+            cursor='hand2',
+            relief='raised',
+            bd=2
         )
         btn_cliente.pack(side='left', padx=10)
         
-        btn_estudio = self.criar_botao_arredondado(
+        btn_estudio = tk.Button(
             frame_botoes_cadastro,
-            "CADASTRAR\nESTÚDIO",
-            self.abrir_cadastro_estudio,
-            '#e74c3c',
-            '#C0392B',
+            text="CADASTRAR\nESTÚDIO",
+            command=self.abrir_cadastro_estudio,
+            bg='#e74c3c',
+            fg='white',
+            font=('Arial', 11, 'bold'),
             width=16,
             height=3,
-            font=('Arial', 11, 'bold')
+            cursor='hand2',
+            relief='raised',
+            bd=2
         )
         btn_estudio.pack(side='left', padx=10)
         
-        btn_admin = self.criar_botao_arredondado(
+        btn_admin = tk.Button(
             cadastro_frame,
-            "ÁREA ADMINISTRATIVA",
-            self.abrir_area_admin,
-            '#95a5a6',
-            '#7F8C8D',
+            text="ÁREA ADMINISTRATIVA",
+            command=self.abrir_area_admin,
+            bg='#95a5a6',
+            fg='white',
+            font=('Arial', 10, 'bold'),
             width=22,
             height=2,
-            font=('Arial', 10, 'bold')
+            cursor='hand2',
+            relief='raised',
+            bd=2
         )
         btn_admin.pack(pady=(20, 10))
-
-        self.add_hover_effect(btn_admin, '#95a5a6', '#7F8C8D')
-    
-    def add_hover_effect(self, button, normal_color, hover_color):
-        """Adiciona efeito de hover aos botões"""
-        def on_enter(e):
-            button.config(bg=hover_color)
-        
-        def on_leave(e):
-            button.config(bg=normal_color)
-        
-        button.bind("<Enter>", on_enter)
-        button.bind("<Leave>", on_leave)
     
     def fazer_login(self):
         """Realiza o login do usuário"""
@@ -299,13 +280,38 @@ class AppPrincipal:
             
             if usuario:
                 self.usuario_logado = usuario
-                self.mostrar_area_logado()
+                
+                # Verifica o tipo de usuário e direciona adequadamente
+                if usuario['tipo_usuario'] == 'cliente':
+                    self.abrir_area_cliente()
+                elif usuario['tipo_usuario'] == 'estudio':
+                    messagebox.showinfo("Estúdio", "Funcionalidade em desenvolvimento!")
+                    self.limpar_campos_login()
+                else:
+                    # Para administradores, mantém o comportamento original
+                    self.mostrar_area_logado()
             else:
-                messagebox.showerror("Erro", "Login ou senha incorretos!")
+                messagebox.showerror("Erro", "Login ou senha incorretos! | Estúdio em desenvolvimento")
                 self.limpar_campos_login()
                 
         except Exception as e:
             messagebox.showerror("Erro", f"Erro ao fazer login: {str(e)}")
+
+    def abrir_area_cliente(self):
+        """Abre a área específica do cliente usando ClienteDentro"""
+        try:
+            self.root.withdraw()  # Esconde a janela principal
+            janela_cliente = tk.Toplevel()
+            
+            # Passa os dados do usuário logado para ClienteDentro
+            app_cliente = ClienteDentro(janela_cliente, self.usuario_logado)
+            
+            # Configura o fechamento da janela
+            janela_cliente.protocol("WM_DELETE_WINDOW", lambda: self.fechar_janela_secundaria(janela_cliente))
+            
+        except Exception as e:
+            messagebox.showerror("Erro", f"Erro ao abrir área do cliente: {str(e)}")
+            self.root.deiconify()  # Mostra a janela principal novamente
 
     def validar_credenciais(self, login, senha):
         """Valida as credenciais no banco de dados"""
@@ -457,12 +463,9 @@ class AppPrincipal:
                  font=('Arial', 12, 'bold'),
                  height=2, width=15,
                  cursor='hand2',
-                 relief='flat',
-                 bd=0,
-                 activebackground='#C0392B',
-                 activeforeground='white')
+                 relief='raised',
+                 bd=2)
         btn_logout.pack(pady=40)
-        self.add_hover_effect(btn_logout, '#e74c3c', '#C0392B')
         
         # Garante altura mínima para centralização
         content_container.configure(height=600)
@@ -501,12 +504,9 @@ class AppPrincipal:
                  font=('Arial', 12, 'bold'),
                  height=2, width=15,
                  cursor='hand2',
-                 relief='flat',
-                 bd=0,
-                 activebackground='#C0392B',
-                 activeforeground='white')
+                 relief='raised',
+                 bd=2)
         btn_logout.pack(pady=40)
-        self.add_hover_effect(btn_logout, '#e74c3c', '#C0392B')
     
     def criar_opcoes_perfil(self, frame_parent):
         """Cria opções baseadas no tipo de usuário"""
@@ -515,85 +515,39 @@ class AppPrincipal:
         if tipo_usuario == 'administrador':
             self.criar_opcoes_admin(frame_parent)
         elif tipo_usuario == 'cliente':
-            self.criar_opcoes_cliente(frame_parent)
+            # Para clientes, não mostra mais opções aqui pois será redirecionado
+            pass
         elif tipo_usuario == 'estudio':
-            self.criar_opcoes_estudio(frame_parent)
+            # Para estúdios, mostra mensagem de desenvolvimento
+            pass
     
     def criar_opcoes_admin(self, frame_parent):
-        """Opções para admin com botões arredondados"""
+        """Opções para admin"""
         tk.Label(frame_parent, text="ÁREA ADMINISTRATIVA", 
                 font=('Arial', 22, 'bold'), 
                 bg='#f0f0f0', fg='#95a5a6').pack(pady=30)
         
         botoes_info = [
-            ("Gerenciar Usuários", self.gerenciar_usuarios, '#95a5a6', '#7F8C8D'),
-            ("Aprovar Estúdios", self.aprovar_estudios, '#34495e', '#2C3E50'),
-            ("Relatórios", self.gerar_relatorios, '#7f8c8d', '#6C7B7D')
+            ("Gerenciar Usuários", self.gerenciar_usuarios, '#95a5a6'),
+            ("Aprovar Estúdios", self.aprovar_estudios, '#34495e'),
+            ("Relatórios", self.gerar_relatorios, '#7f8c8d')
         ]
         
-        for texto, comando, cor, hover_cor in botoes_info:
-            btn = self.criar_botao_arredondado(
+        for texto, comando, cor in botoes_info:
+            btn = tk.Button(
                 frame_parent,
-                texto,
-                comando,
-                cor,
-                hover_cor,
+                text=texto,
+                command=comando,
+                bg=cor,
+                fg='white',
+                font=('Arial', 14, 'bold'),
                 width=25,
                 height=2,
-                font=('Arial', 14, 'bold')
+                cursor='hand2',
+                relief='raised',
+                bd=2
             )
             btn.pack(pady=15)
-            self.add_hover_effect(btn, cor, hover_cor)
-    
-    def criar_opcoes_cliente(self, frame_parent):
-        """Opções para clientes"""
-        tk.Label(frame_parent, text="ÁREA DO CLIENTE", 
-                font=('Arial', 22, 'bold'), 
-                bg='#f0f0f0', fg='#BA4467').pack(pady=30)
-        
-        botoes_info = [
-            ("Meu Perfil", self.abrir_meu_perfil, '#BA4467', '#A53A5A'),
-            ("Buscar Estúdios", self.buscar_estudios, '#3498db', '#2980B9')
-        ]
-        
-        for texto, comando, cor, hover_cor in botoes_info:
-            btn = tk.Button(frame_parent, text=texto, 
-                     command=comando,
-                     bg=cor, fg='white',
-                     font=('Arial', 14, 'bold'),
-                     width=25, height=2,
-                     cursor='hand2',
-                     relief='flat',
-                     bd=0,
-                     activebackground=hover_cor,
-                     activeforeground='white')
-            btn.pack(pady=15)
-            self.add_hover_effect(btn, cor, hover_cor)
-    
-    def criar_opcoes_estudio(self, frame_parent):
-        """Opções para estúdios"""
-        tk.Label(frame_parent, text="ÁREA DO ESTÚDIO", 
-                font=('Arial', 22, 'bold'), 
-                bg='#f0f0f0', fg='#e74c3c').pack(pady=30)
-        
-        botoes_info = [
-            ("Meu Perfil", self.abrir_meu_perfil, '#e74c3c', '#C0392B'),
-            ("Meus Serviços", self.gerenciar_servicos, '#f39c12', '#E67E22')
-        ]
-        
-        for texto, comando, cor, hover_cor in botoes_info:
-            btn = tk.Button(frame_parent, text=texto, 
-                     command=comando,
-                     bg=cor, fg='white',
-                     font=('Arial', 14, 'bold'),
-                     width=25, height=2,
-                     cursor='hand2',
-                     relief='flat',
-                     bd=0,
-                     activebackground=hover_cor,
-                     activeforeground='white')
-            btn.pack(pady=15)
-            self.add_hover_effect(btn, cor, hover_cor)
     
     # Métodos das funcionalidades
     def gerenciar_usuarios(self):
@@ -604,15 +558,6 @@ class AppPrincipal:
 
     def gerar_relatorios(self):
         messagebox.showinfo("Admin", "Funcionalidade 'Relatórios' em desenvolvimento!")
-        
-    def abrir_meu_perfil(self):
-        messagebox.showinfo("Perfil", "Funcionalidade 'Meu Perfil' em desenvolvimento!")
-    
-    def buscar_estudios(self):
-        messagebox.showinfo("Busca", "Funcionalidade 'Buscar Estúdios' em desenvolvimento!")
-    
-    def gerenciar_servicos(self):
-        messagebox.showinfo("Serviços", "Funcionalidade 'Meus Serviços' em desenvolvimento!")
     
     def abrir_cadastro_cliente(self):
         from app_cliente import AppCliente
@@ -661,6 +606,3 @@ class AppPrincipal:
         """Inicia a aplicação"""
         self.root.mainloop()
 
-if __name__ == "__main__":
-    app = AppPrincipal()
-    app.executar()

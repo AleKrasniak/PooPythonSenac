@@ -33,12 +33,3 @@ class AdministradorDAO:
         self.cursor.commit()
 
 
-
-
-# def __init__(self, id_administrador=None, id_perfil=None, nome="", email="", login="", senha=""):
-#         self.id_administrador = id_administrador
-#         self.id_perfil = id_perfil
-#         self.nome = nome
-#         self.email = email
-#         self.login = login
-#         self.senha = senha

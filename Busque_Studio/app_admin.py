@@ -1056,7 +1056,3 @@ class AppAdmin:
             self.dao.conexao.rollback()
             messagebox.showerror("Erro", f"Erro ao deletar usuário: {str(e)}")
 
-if __name__ == "__main__":
-    root = tk.Tk()
-    app = AppAdmin(root)
-    root.mainloop()  # Isso mantém a janela aberta

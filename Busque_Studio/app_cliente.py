@@ -12,13 +12,13 @@ class AppCliente:
     def __init__(self, root):
         self.root = root
         self.root.title("Cadastro de Cliente - BusqueStudios")
-        self.root.state('zoomed')  # Abre em tela cheia no Windows
-        # Para sistemas Unix/Linux, use: self.root.attributes('-zoomed', True)
+        self.root.state('zoomed') #tela cheia 
+
         self.root.configure(bg='#f0f0f0')
 
         self.dao = ClienteDAO()
         self.endereco_dao = EnderecoDAO()
-        self.perfil_id = 2  # ID para perfil de cliente
+        self.perfil_id = 2  #perfil de cliente
         self.perfil_nome = "Cliente"
 
         self.estados = self.carregar_ufs()
@@ -37,47 +37,47 @@ class AppCliente:
             return []
 
     def criar_interface(self):
-        # Container principal centralizado
+        # container principal centralizado
         main_container = tk.Frame(self.root, bg='#f0f0f0')
         main_container.pack(expand=True, fill='both')
 
-        # Canvas para permitir scroll
+        # local scroll
         canvas = tk.Canvas(main_container, bg='#f0f0f0', highlightthickness=0)
         
-        # Scrollbar vertical
+        # scroll vertical
         scrollbar = ttk.Scrollbar(main_container, orient="vertical", command=canvas.yview)
         
         # Frame scrollable que conterá todo o conteúdo
         scrollable_frame = tk.Frame(canvas, bg='#f0f0f0')
         
-        # Configurar scroll
+        # config. scroll
         scrollable_frame.bind(
             "<Configure>",
             lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
         )
         
-        # Criar janela no canvas
+        # creia janela no canvas
         canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
         canvas.configure(yscrollcommand=scrollbar.set)
         
-        # Posicionar canvas e scrollbar
+        # posi canvas e scrollbar
         canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
 
-        # Frame principal que será centralizado dentro do scrollable_frame
+        # tela principal que será centralizada /scrollable_frame
         content_frame = tk.Frame(scrollable_frame, bg='#f0f0f0')
-        content_frame.pack(expand=True, pady=50)  # Padding para centralização vertical
+        content_frame.pack(expand=True, pady=50)  #centralização vertical
 
-        # Título centralizado
+        # título 
         titulo = tk.Label(content_frame, text="CADASTRO DE CLIENTE",
                          font=('Arial', 16, 'bold'), bg='#f0f0f0', fg='#333')
         titulo.pack(pady=(0, 20))
 
-        # Frame para os campos de entrada
+        # local para os campos de entrada
         frame = tk.Frame(content_frame, bg='#f0f0f0')
         frame.pack(pady=10)
 
-        # Campos de entrada
+        # campos de entrada
         campos = [
             ("Nome *:", "entry_nome"),
             ("Email *:", "entry_email"),
@@ -102,7 +102,7 @@ class AppCliente:
             setattr(self, attr, entry)
             row += 1
 
-        # Combobox para UF
+        #UF
         tk.Label(frame, text="UF *:", bg='#f0f0f0', font=('Arial', 10)).grid(
             row=row, column=0, sticky='w', pady=3, padx=(0, 10))
         lista_uf = [uf['sigla'] for uf in self.estados]
@@ -111,32 +111,32 @@ class AppCliente:
         self.combo_uf.bind("<<ComboboxSelected>>", self.on_uf_selecionado)
         row += 1
 
-        # Combobox para Cidade
+        #cidade
         tk.Label(frame, text="Cidade *:", bg='#f0f0f0', font=('Arial', 10)).grid(
             row=row, column=0, sticky='w', pady=3, padx=(0, 10))
         self.combo_cidade = ttk.Combobox(frame, values=[], width=27, state='readonly')
         self.combo_cidade.grid(row=row, column=1, sticky='w', pady=3)
         row += 1
 
-        # Combobox para Gênero
+        #gênero
         tk.Label(frame, text="Gênero:", bg='#f0f0f0', font=('Arial', 10)).grid(
             row=row, column=0, sticky='w', pady=3, padx=(0, 10))
-        self.combo_genero = ttk.Combobox(frame, values=['Masculino', 'Feminino', 'Outro'], 
+        self.combo_genero = ttk.Combobox(frame, values=['Masculino', 'Feminino'], 
                                         width=27, state='readonly')
         self.combo_genero.grid(row=row, column=1, sticky='w', pady=3)
         row += 1
 
-        # Frame para botões centralizados
+        #botões centralizados
         frame_botoes = tk.Frame(content_frame, bg='#f0f0f0')
         frame_botoes.pack(pady=30)
 
-        # Botão de Cadastro
+        #cadastro
         btn_cadastrar = tk.Button(frame_botoes, text="CADASTRAR-SE COMO CLIENTE",
                                  command=self.criar, bg='#4CAF50', fg='white',
                                  font=('Arial', 12, 'bold'), width=25, height=2)
         btn_cadastrar.pack(pady=5)
 
-        # Botão Limpar
+        #limpar
         btn_limpar = tk.Button(frame_botoes, text="LIMPAR CAMPOS", command=self.limpar_campos,
                               bg='#607D8B', fg='white', font=('Arial', 10, 'bold'),
                               width=15, height=2)
@@ -145,15 +145,11 @@ class AppCliente:
         # Bind do scroll do mouse
         def _on_mousewheel(event):
             canvas.yview_scroll(int(-1*(event.delta/120)), "units")
-        
-        # Bind para Windows
+
+        #scroll bolinha 
         canvas.bind("<MouseWheel>", _on_mousewheel)
         
-        # Bind para Linux
-        canvas.bind("<Button-4>", lambda e: canvas.yview_scroll(-1, "units"))
-        canvas.bind("<Button-5>", lambda e: canvas.yview_scroll(1, "units"))
-        
-        # Centralizar horizontalmente o conteúdo
+        # centraliza horizontalmente 
         def centralizar_conteudo(event=None):
             canvas_width = canvas.winfo_width()
             frame_width = content_frame.winfo_reqwidth()
@@ -211,17 +207,17 @@ class AppCliente:
         senha = self.entry_senha.get().strip()
         genero = self.combo_genero.get().strip()
 
-        # Validações básicas
+        #  campos obrigatórios estão preenchidos?
         if not (nome and email and cpf and telefone and cep and uf and cidade):
             messagebox.showwarning("Atenção", "Preencha todos os campos obrigatórios (*)!")
             return
 
-        if not cep:
+        if not cep: #valida formato CEP
             messagebox.showwarning("Atenção", "CEP inválido. Formato correto: 12345-678 ou 12345678")
             return
 
         try:
-            # Criar endereço
+            # criando endereço
             endereco = Endereco(
                 rua=rua or "Não informado",
                 numero=int(numero) if numero.isdigit() else 0,
@@ -234,12 +230,12 @@ class AppCliente:
                 data_atualizacao=datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             )
 
-            # Inserir endereço no banco
+            # inserir endereço no banco
             id_endereco = self.endereco_dao.criar(endereco)
             if not id_endereco:
                 raise Exception("Falha ao criar endereço: ID não foi gerado")
 
-            # Criar cliente
+            # criando cliente
             cliente = Cliente(
                 id_perfil=self.perfil_id,
                 id_endereco=id_endereco,
@@ -253,7 +249,7 @@ class AppCliente:
                 senha=senha if senha else None
             )
 
-            # Inserir cliente no banco
+            # inserir cliente no banco
             self.dao.criar(cliente)
             messagebox.showinfo("Sucesso", "Cadastro realizado com sucesso!")
             self.limpar_campos()
@@ -275,8 +271,3 @@ class AppCliente:
         self.combo_uf.set('')
         self.combo_cidade.set('')
         self.combo_genero.set('')
-
-if __name__ == "__main__":
-    root = tk.Tk()
-    app = AppCliente(root)
-    root.mainloop()
