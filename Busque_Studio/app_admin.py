@@ -38,7 +38,7 @@ class AppAdmin:
         self.combo_perfil.bind('<<ComboboxSelected>>', self.on_perfil_change)
 
     def on_perfil_change(self, event=None):
-        """Altera o label do campo CPF/CNPJ baseado no perfil selecionado"""
+        #label do campo CPF/CNPJ baseado no perfil selecionado
         perfil_sel = self.combo_perfil.get()
         if perfil_sel:
             id_perfil = int(perfil_sel.split(' - ')[0])
@@ -51,7 +51,7 @@ class AppAdmin:
                     self.label_cpf_cnpj.config(text="CPF *:")
 
     def carregar_enderecos(self):
-        """Carrega endereços disponíveis do banco de dados"""
+        # carrega endereços disponíveis do bd
         cursor = self.dao.cursor
         cursor.execute("""SELECT id_endereco, 
                            CONCAT(rua, ', ', numero, ' - ', bairro) as endereco_completo 
@@ -59,12 +59,12 @@ class AppAdmin:
         return cursor.fetchall()
 
     def carregar_estados(self):
-        """Carrega estados usando o EnderecoDAO"""
+        #carrega estados EnderecoDAO
 
         return self.endereco_dao.listar_estados()
     
     def carregar_ufs(self):
-        """Carrega estados da API do IBGE"""
+        #IBGE
         import requests
         url = "https://servicodados.ibge.gov.br/api/v1/localidades/estados"
         try:
@@ -78,7 +78,7 @@ class AppAdmin:
             return []
 
     def on_uf_selecionado(self, event):
-        """Carrega cidades quando UF é selecionado"""
+        # cidades quando UF é selecionado
         import requests
         uf = self.combo_uf.get()
         estado = next((e for e in self.estados_ibge if e['sigla'] == uf), None)
@@ -134,8 +134,8 @@ class AppAdmin:
         content_frame.pack(expand=True, pady=30)  # Padding para centralização vertical
 
         # BOTÃO VOLTAR (se callback foi fornecido)
-        if self.callback_voltar:
-            self.criar_botao_voltar(content_frame)
+        # if self.callback_voltar:
+        #     self.criar_botao_voltar(content_frame)
         
         # TÍTULO
         titulo = tk.Label(content_frame, text="ÁREA ADMINISTRATIVA", 
@@ -371,21 +371,21 @@ class AppAdmin:
         canvas.bind('<Configure>', centralizar_conteudo)
         scrollable_frame.bind('<Configure>', centralizar_conteudo)
 
-    def criar_botao_voltar(self, parent):
-        """Cria o botão voltar"""
-        frame_voltar = tk.Frame(parent, bg='#f0f0f0')
-        frame_voltar.pack(anchor='nw', pady=(0, 20))
+    # def criar_botao_voltar(self, parent):
+    #     "Cria o botão voltar"""
+    #     frame_voltar = tk.Frame(parent, bg='#f0f0f0')
+    #     frame_voltar.pack(anchor='nw', pady=(0, 20))
         
-        btn_voltar = tk.Button(frame_voltar, text="← VOLTAR", 
-                              command=self.voltar_tela_principal,
-                              bg='#34495e', fg='white', 
-                              font=('Arial', 10, 'bold'),
-                              width=12, height=2, cursor='hand2',
-                              relief='raised', bd=2)
-        btn_voltar.pack()
+    #     btn_voltar = tk.Button(frame_voltar, text="← VOLTAR", 
+    #                           command=self.voltar_tela_principal,
+    #                           bg='#34495e', fg='white', 
+    #                           font=('Arial', 10, 'bold'),
+    #                           width=12, height=2, cursor='hand2',
+    #                           relief='raised', bd=2)
+    #     btn_voltar.pack()
 
     def processar_endereco(self, id_endereco_atual=None):
-        """Processa endereço: cria novo se dados fornecidos, senão mantém atual"""
+        # cria novo se dados fornecidos, senão mantém
         from datetime import datetime
         
         # Verificar se algum campo de endereço foi preenchido
@@ -437,14 +437,14 @@ class AppAdmin:
         
         return cursor.lastrowid
 
-    def voltar_tela_principal(self):
-        """Volta para a tela principal"""
-        self.root.destroy()
-        if self.callback_voltar:
-            self.callback_voltar()
+    # def voltar_tela_principal(self):
+    #     volta para a tela principal
+    #     self.root.destroy()
+    #     if self.callback_voltar:
+    #         self.callback_voltar()
 
     def criar_admin_padrao(self):
-        """Cria o usuário admin padrão com login 'adminale' e senha '123'"""
+    # usuário admin padrão com login 'adminale' e senha '123'
         try:
             # Limpar campos
             self.limpar_campos()
@@ -474,18 +474,18 @@ class AppAdmin:
             
             self.text_resultados.delete('1.0', tk.END)
             self.text_resultados.insert('1.0', 
-                "✅ DADOS DO ADMIN PADRÃO PREENCHIDOS:\n"
+                "DADOS DO ADMIN PADRÃO PREENCHIDOS:\n"
                 f"Login: {admin_data['login']}\n"
                 f"Senha: {admin_data['senha']}\n"
                 f"Nome: {admin_data['nome']}\n\n"
-                "👆 Clique em 'CRIAR USUÁRIO' para salvar no banco de dados."
+                "Clique em 'CRIAR USUÁRIO' para salvar no banco de dados."
             )
             
         except Exception as e:
             messagebox.showerror("Erro", f"Erro ao preencher dados do admin: {str(e)}")
 
     def criar_usuario(self):
-        """Cria um novo usuário baseado no perfil selecionado"""
+        # cria um novo usuário baseado no perfil selecionado
         try:
             # Validar campos obrigatórios
             nome = self.entry_nome.get().strip()
@@ -550,7 +550,7 @@ class AppAdmin:
 
 
     def listar_todos(self):
-        """Lista todos os usuários de todas as tabelas"""
+        # lista todos os usuários 
         try:
             cursor = self.dao.cursor
             resultado = "📋 LISTA COMPLETA DE USUÁRIOS\n"
@@ -723,7 +723,7 @@ class AppAdmin:
             messagebox.showerror("Erro", f"Erro ao listar estúdios: {str(e)}")
 
     def buscar_por_id(self):
-        """Busca usuário por ID em todas as tabelas"""
+        #busca usuário por ID em todas as tabelas
         try:
             id_usuario = self.entry_id.get().strip()
             if not id_usuario:
@@ -834,7 +834,7 @@ class AppAdmin:
             messagebox.showerror("Erro", f"Erro ao buscar usuário: {str(e)}")
 
     def atualizar_usuario(self):
-        """Atualiza usuário baseado no perfil selecionado - COM ENDEREÇO DAO"""
+        #Atualiza usuário baseado no perfil /  ENDEREÇO DAO
         try:
             id_usuario = self.entry_id.get().strip()
             if not id_usuario:
@@ -859,7 +859,7 @@ class AppAdmin:
             
             cursor = self.dao.cursor
             
-            # Atualizar baseado no perfil
+            # atualizar baseado no perfil
             if id_perfil == 1:  # Administrador
                 login = self.entry_login.get().strip()
                 senha = self.entry_senha.get().strip()
@@ -970,7 +970,7 @@ class AppAdmin:
 
 
     def limpar_campos(self):
-        """Limpa todos os campos do formulário"""
+        # limpaa tudoo formulário
         campos = [
             'entry_id', 'entry_nome', 'entry_email', 'entry_cpf', 'entry_telefone',
             'entry_dt_nasc', 'entry_login', 'entry_senha', 'entry_descricao',
@@ -996,7 +996,7 @@ class AppAdmin:
             self.text_resultados.insert('1.0', "Campos limpos! Pronto para nova operação.")
 
     def deletar_usuario(self):
-        """Deleta usuário baseado no perfil selecionado"""
+        # Deleta usuário baseado no perfil 
         try:
             id_usuario = self.entry_id.get().strip()
             if not id_usuario:
