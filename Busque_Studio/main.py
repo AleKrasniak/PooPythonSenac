@@ -12,7 +12,7 @@ if __name__ == "__main__":
     main()
 
 
-
+#RODAR O CÓDIGO POR AQUI, COMECE POR AQUI
 # ⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️
 # ATENÇÃO PROFESSOOOOOOOOOR
 # PARA O CÓDIGO RODAR É NECESSÁRIO INSTALAR AS SEGUINTES BIBLIOTECAS 

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Tempo de geração: 16/06/2025 às 21:33
+-- Tempo de geração: 17/06/2025 às 02:51
 -- Versão do servidor: 10.4.32-MariaDB
 -- Versão do PHP: 8.2.12
 
@@ -41,8 +41,7 @@ CREATE TABLE `administrador` (
 --
 
 INSERT INTO `administrador` (`id_administrador`, `id_perfil`, `nome`, `email`, `login`, `senha`) VALUES
-(4, 1, 'Admin', 'admin@teste.com', 'admin', '123'),
-(5, 1, 'Adm 1', 'admin@busquestudios.com', '', '123');
+(4, 1, 'Admin', 'admin@teste.com', 'admin', '123');
 
 -- --------------------------------------------------------
 
@@ -86,7 +85,9 @@ CREATE TABLE `alvara` (
 
 INSERT INTO `alvara` (`id_alvara`, `id_estudio`, `numero_alvara`, `tipo_alvara`, `data_emissao`, `data_validade`, `status`, `descricao`, `documento_anexo`, `criado_em`, `atualizado_em`) VALUES
 (1, 4, '0247/2025', 'Alvará de Funcionamento', '2025-02-06', '2027-02-06', 'ativo', 'Alvará de Funcionamento do Estúdio', NULL, '2025-06-16 17:09:10', '2025-06-16 17:09:10'),
-(2, 4, '1198/2025', 'Licença Sanitária', '2025-06-14', '2027-06-14', 'ativo', 'Licença Sanitária do Estúdio', NULL, '2025-06-16 17:09:10', '2025-06-16 17:09:10');
+(2, 4, '1198/2025', 'Licença Sanitária', '2025-06-14', '2027-06-14', 'ativo', 'Licença Sanitária do Estúdio', NULL, '2025-06-16 17:09:10', '2025-06-16 17:09:10'),
+(3, 5, '2025/123456', 'Alvará de Funcionamento', '2025-02-14', '2026-02-14', 'ativo', 'Alvará de Funcionamento do Estúdio', NULL, '2025-06-17 00:19:22', '2025-06-17 00:19:22'),
+(4, 5, '2025/789321', 'Licença Sanitária', '2025-02-18', '2026-02-18', 'ativo', 'Licença Sanitária do Estúdio', NULL, '2025-06-17 00:19:22', '2025-06-17 00:19:22');
 
 -- --------------------------------------------------------
 
@@ -147,7 +148,8 @@ INSERT INTO `cliente` (`id_cliente`, `id_perfil`, `id_endereco`, `nome`, `dt_nas
 (6, 3, 1, 'Administrador Geral', '1990-01-01', '', '(41) 99999-9999', '000.000.000', 'admin@busquestudios.com', 'admale', '123'),
 (9, 2, 16, 'Alex Leal', '2005-06-19', 'Masculino', '429999966622', '88888888877', 'Alex@gmail.com', 'Alex', 'Alex'),
 (10, 2, 17, 'André Afonso', '2005-03-04', 'Masculino', '4298887766', '77777777799', 'André@gmail.com', 'Andre', 'Andre'),
-(11, 2, 19, 'FernandoGois@gmail.com', '1990-02-19', 'Masculino', '4299992266', '12378945621', 'FernandoGois@gmail.com', 'Nando', 'Nando');
+(11, 2, 19, 'Fernando Gois', '1990-02-19', 'Masculino', '4299992266', '12378945621', 'FernandoGois@gmail.com', 'Nando', 'Nando'),
+(12, 2, 22, 'Gustavo Reis', '2003-06-24', 'Masculino', '(11) 94241-3427', '53302784659', 'GustavoR@gmail', 'Gustavo', 'Gustavo');
 
 -- --------------------------------------------------------
 
@@ -208,7 +210,9 @@ INSERT INTO `endereco` (`id_endereco`, `rua`, `numero`, `bairro`, `cidade`, `com
 (17, 'Rua Octávio Carvalho', 456, 'Jardim Carvalho', 'Ponta Grossa', 'Casa', 'PR', '12345-678', '2025-06-15 23:23:20', '2025-06-15 23:23:20'),
 (18, 'Comendador Miró', 762, 'Centro', 'Santa Fé', 'Casa', 'PR', '12345-678', '2025-06-15 23:52:41', '2025-06-15 23:52:41'),
 (19, 'Comendador Miró', 789, 'Centro', 'Ponta Grossa', 'Casa', 'PR', '12345-678', '2025-06-15 23:55:04', '2025-06-15 23:55:04'),
-(20, 'Comendador Miró', 457, 'Centro', 'Ponta Grossa', 'Prédio Teixira Flores', 'PR', '12345-678', '2025-06-16 17:09:10', '2025-06-16 17:09:10');
+(20, 'Comendador Miró', 457, 'Centro', 'Ponta Grossa', 'Prédio Teixira Flores', 'PR', '12345-678', '2025-06-16 17:09:10', '2025-06-16 17:09:10'),
+(21, 'Joaquim Nabuco', 874, 'Boa Vista', 'Ponta Grossa', 'Casa', 'PR', '12345-678', '2025-06-17 00:19:22', '2025-06-17 00:19:22'),
+(22, 'Souza Caldas', 366, 'Uvaranas', 'Ponta Grossa', 'Casa 3', 'PR', '12345-678', '2025-06-17 00:41:16', '2025-06-17 00:41:16');
 
 -- --------------------------------------------------------
 
@@ -235,8 +239,8 @@ CREATE TABLE `estudio` (
 
 INSERT INTO `estudio` (`id_estudio`, `id_perfil`, `id_endereco`, `nome`, `cnpj`, `descricao`, `login`, `senha`, `tipo`, `foto_perfil`) VALUES
 (1, 3, 1, 'Studio Arte & Tattoo', '12345678000190', 'Estúdio especializado em tatuagens artísticas', 'studioarte', 'senha123', 'Tatuagem', 'uploads/studios/studio_arte_perfil.jpg'),
-(2, 3, 8, 'Ricardo Tatoos', '11111111111111', 'busque', 'busque', 'busque', 'Tatuagem', 'busque'),
-(4, 3, 20, 'Estúdio Arte Mais', '89185808000102', 'Estúdio especializado em Old School', 'ArteMais', 'ArteMais', 'Tatuagem', 'https://img.freepik.com/vetores-premium/logotipo-de-maquinas-de-estudio-de-tatuagem-com-rosa_18591-64922.jpg');
+(4, 3, 20, 'Estúdio Arte Mais', '89185808000102', 'Estúdio especializado em Old School', 'ArteMais', 'ArteMais', 'Tatuagem', 'https://img.freepik.com/vetores-premium/logotipo-de-maquinas-de-estudio-de-tatuagem-com-rosa_18591-64922.jpg'),
+(5, 3, 21, 'Estúdio Aplique-se', '12345678000195', 'Estúdio especializado em piercings', 'Aplique', 'Aplique', 'Piercing', 'https://img.freepik.com/vetores-premium/modelo-de-logotipo-de-estudio-de-piercing-orelha-perfurada-minimo-logotipo-de-ilustracao-vetorial-ele-de-icone-de-linha-fina_948712-64.jpg');
 
 -- --------------------------------------------------------
 
@@ -530,7 +534,7 @@ ALTER TABLE `agendamento`
 -- AUTO_INCREMENT de tabela `alvara`
 --
 ALTER TABLE `alvara`
-  MODIFY `id_alvara` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id_alvara` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT de tabela `avaliacao`
@@ -548,7 +552,7 @@ ALTER TABLE `chat`
 -- AUTO_INCREMENT de tabela `cliente`
 --
 ALTER TABLE `cliente`
-  MODIFY `id_cliente` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `id_cliente` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT de tabela `denuncia`
@@ -560,13 +564,13 @@ ALTER TABLE `denuncia`
 -- AUTO_INCREMENT de tabela `endereco`
 --
 ALTER TABLE `endereco`
-  MODIFY `id_endereco` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
+  MODIFY `id_endereco` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
 
 --
 -- AUTO_INCREMENT de tabela `estudio`
 --
 ALTER TABLE `estudio`
-  MODIFY `id_estudio` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id_estudio` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT de tabela `mensagem`
