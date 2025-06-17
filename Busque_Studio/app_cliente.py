@@ -81,8 +81,8 @@ class AppCliente:
         campos = [
             ("Nome *:", "entry_nome"),
             ("Email *:", "entry_email"),
-            ("CPF *:", "entry_cpf"),
-            ("Telefone *:", "entry_telefone"),
+            ("CPF (11 Números) *:", "entry_cpf"),
+            ("Telefone (xx) x xxxx-xxxx *:", "entry_telefone"),
             ("CEP * (12345-678):", "entry_cep"),
             ("Rua:", "entry_rua"),
             ("Número:", "entry_numero"),

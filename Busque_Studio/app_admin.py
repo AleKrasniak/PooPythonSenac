@@ -1057,4 +1057,3 @@ class AppAdmin:
         except Exception as e:
             self.dao.conexao.rollback()
             messagebox.showerror("Erro", f"Erro ao deletar usuário: {str(e)}")
-

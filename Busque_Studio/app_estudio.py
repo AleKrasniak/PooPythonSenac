@@ -11,9 +11,9 @@ class AppEstudio:
     def __init__(self, root):
         self.root = root
         self.root.title("Cadastro de Estúdio - BusqueStudios")
-        self.root.state('zoomed')  #tela cheia no Windows
+        self.root.state('zoomed')  #tela cheia 
 
-        self.root.configure(bg='#f0f0f0')
+        self.root.configure(bg="#c0d1ff")
 
         self.estudio_dao = EstudioDAO()
         self.alvara_dao = AlvaraDAO()
@@ -56,7 +56,7 @@ class AppEstudio:
     def criar_interface(self):
         """Cria a interface gráfica do aplicativo"""
         # Container principal
-        main_container = tk.Frame(self.root, bg='#f0f0f0')
+        main_container = tk.Frame(self.root, bg='#c0d1ff')
         main_container.pack(fill='both', expand=True)
 
         # Canvas e scrollbar para todo o conteúdo
@@ -84,7 +84,7 @@ class AppEstudio:
         title_frame = tk.Frame(content_container, bg='#f0f0f0')
         title_frame.pack(pady=(20, 30), fill='x')
         tk.Label(title_frame, text="CADASTRO DE ESTÚDIO", font=('Arial', 16, 'bold'), 
-                bg='#f0f0f0', fg='#333').pack()
+                bg='#f0f0f0', fg='#120118').pack()
 
         # Frame principal centralizado para os campos
         center_frame = tk.Frame(content_container, bg='#f0f0f0')
@@ -109,9 +109,9 @@ class AppEstudio:
         # Campos da coluna esquerda
         campos_esquerda = [
             ("Nome do Estúdio *:", "entry_nome"),
-            ("CNPJ * (14 dígitos):", "entry_cnpj"),
+            ("CNPJ * (14 números):", "entry_cnpj"),
             ("Email *:", "entry_email"),
-            ("Telefone *:", "entry_telefone"),
+            ("Telefone (xx) x xxxx-xxxx) *:", "entry_telefone"),
             ("Descrição:", "text_descricao"),
             ("CEP * (12345-678):", "entry_cep"),
             ("Rua:", "entry_rua"),
@@ -346,7 +346,7 @@ class AppEstudio:
         funcionamento_frame.pack(side='left', padx=(0, 30), fill='both', expand=True)
 
         # Campos do Alvará de Funcionamento
-        tk.Label(funcionamento_frame, text="Número do Alvará *:", 
+        tk.Label(funcionamento_frame, text="Número do Alvará XXXX/XXXXX*:", 
                 bg='#f0f0f0', font=('Arial', 10)).pack(anchor='w', pady=(5, 2))
         self.entry_alvara_funcionamento = tk.Entry(funcionamento_frame, width=35, font=('Arial', 10))
         self.entry_alvara_funcionamento.pack(pady=(0, 15))
@@ -377,7 +377,7 @@ class AppEstudio:
         sanitaria_frame.pack(side='right', padx=(30, 0), fill='both', expand=True)
 
         # Campos da Licença Sanitária
-        tk.Label(sanitaria_frame, text="Número da Licença *:", 
+        tk.Label(sanitaria_frame, text="Número da Licença XXXX/XXXXX*:", 
                 bg='#f0f0f0', font=('Arial', 10)).pack(anchor='w', pady=(5, 2))
         self.entry_licenca_sanitaria = tk.Entry(sanitaria_frame, width=35, font=('Arial', 10))
         self.entry_licenca_sanitaria.pack(pady=(0, 15))
